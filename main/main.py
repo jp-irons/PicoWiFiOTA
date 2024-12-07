@@ -1,5 +1,5 @@
 import sys
-import micropython_ota
+# import micropython_ota
 import network
 import socket
 import requests
@@ -7,7 +7,8 @@ import time
 
 wlan_sta = network.WLAN(network.STA_IF)
 
-def do_connect(ssid='jamnethome_2GHz', password='pa55word90123!'):
+
+def do_connect(ssid='jamnethome_5GHz', password='pa55word90123!'):
     print('do_connect()')
     connected = None
     wlan_sta.active(True)
@@ -28,6 +29,7 @@ def do_connect(ssid='jamnethome_2GHz', password='pa55word90123!'):
         print('\nFailed. Not Connected to: ' + ssid)
     return connected
 
+
 def disconnect_wifi():
     wlan_sta.active(True)
     if not wlan_sta.isconnected():
@@ -36,11 +38,11 @@ def disconnect_wifi():
 
 
 def http_get(host='', path=''):
-
-    url='https://1drv.ms/t/s!AgUtKRuWyBCtloRNgOC4MIRUXVGVAQ?e=IzeAwW'
-    url='https://drive.google.com/file/d/14rSq2J_wrDV_qIotLTCFt5TPppJ2iQHk/view?usp=drive_link'
+    # url = 'https://1drv.ms/t/s!AgUtKRuWyBCtloRNgOC4MIRUXVGVAQ?e=IzeAwW'
+    # url = 'https://drive.google.com/file/d/14rSq2J_wrDV_qIotLTCFt5TPppJ2iQHk/view?usp=drive_link'
     #url='https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd'
-    path='/OTA'
+    url = 'http://storagepi.local/ota'
+    path = '/ota/a.html'
 
     print(url)
     response = requests.get(url)
@@ -52,13 +54,16 @@ def http_get(host='', path=''):
     print(response_content)
 
 
-def connect_wifi():
-    print('connect_wifi()')
-    do_connect()
+def check_for_update():
+    # connect_wifi()
+    # update_to_latest_version()
+    pass
+
 
 def main():
     # connect_wifi()
     pass
+
 
 if __name__ == '__main__':
     main()
