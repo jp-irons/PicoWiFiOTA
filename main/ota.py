@@ -1,7 +1,7 @@
 import network
 import urequests
 import os
-import json
+import ujson as json
 import machine
 from time import sleep
 
@@ -25,7 +25,7 @@ class OTAUpdater:
         # get the current version (stored in version.json)
         if 'version.json' in os.listdir():    
             with open('version.json') as f:
-                self.current_version = int(json.load(f)['version'])
+                self.current_version = int(json.loads(f)['version'])
             print(f"Current device firmware version is '{self.current_version}'")
 
         else:
