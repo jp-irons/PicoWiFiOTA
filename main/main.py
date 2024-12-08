@@ -15,7 +15,7 @@ wlan_sta = network.WLAN(network.STA_IF)
 
 class WiFiConfigManager:
     """ This class handles OTA updates. It connects to the Wi-Fi, checks for updates, downloads and installs them."""
-    def __init__(self, wlan_filename ='WIFI_config.json'):
+    def __init__(self, wlan_filename ='WIFI_CONFIG.json'):
         self.wlan_filename = wlan_filename
         self.wlan_attributes = None
         self.load()
