@@ -6,7 +6,8 @@ import requests
 import time
 import json
 import os
-import ulogging as logging
+import logging as logging
+import asyncio
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -57,14 +58,14 @@ class WiFiConfigManager:
         wlan_sta.active(True)
         connected = False
         if wlan_sta.isconnected():
-            logger.info('Connected: ', wlan_sta.ifconfig())
+            logger.info('Connected: %s', wlan_sta.ifconfig())
             return True
         for wap_credentials in wifi_credentials:
             ssid = wap_credentials['SSID']
             password = wap_credentials['PASSWORD']
             connected = self.connect_to(ssid, password)
             if connected:
-                logger.info('Connected to ', ssid, wlan_sta.ifconfig())
+                logger.info('Connected to %s', ssid, wlan_sta.ifconfig())
                 return connected
             else:
                 logger.info('Failed to connect to ' + ssid)
@@ -81,7 +82,6 @@ def disconnect_wifi():
     if not wlan_sta.isconnected():
         return None
     wlan_sta.disconnect()
-
 
 
 def http_get(host='', path=''):
