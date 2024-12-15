@@ -530,7 +530,7 @@ class Response:
                    "N/A" for any other status codes.
     """
     types_map = {
-        'css': 'text/css',
+        'static': 'text/static',
         'gif': 'image/gif',
         'html': 'text/html',
         'jpg': 'image/jpeg',

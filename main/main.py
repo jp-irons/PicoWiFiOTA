@@ -5,7 +5,7 @@ import os
 import logging as logging
 import asyncio
 
-from microdot import Microdot, Response
+from microdot import Microdot, Response, send_file
 from microdot.utemplate import Template
 
 logging.basicConfig(level=logging.DEBUG)
@@ -75,14 +75,38 @@ class WiFiManager:
 
 server = Microdot()
 Response.default_content_type = 'text/html'
+app_name = "Pi Pico Embedded"
 
 
-@server.route('/', methods=['GET', 'POST'])
+# @server.route('/', methods=['GET', 'POST'])
+# async def index(req):
+#     return Template('index.html').render(page='Index')
+#
+#
+
+@server.route('/static/<path:path>')
+async def static(request, path):
+    if '..' in path:
+        # directory traversal is not allowed
+        return 'Not found', 404
+    return send_file('static/' + path)
+
+@server.route('/')
 async def index(req):
-    name = None
-    if req.method == 'POST':
-        name = req.form.get('name')
-    return Template('index.html').render(name=name)
+    args = {'app_name': app_name, 'page': 'Index'}
+    return Template('index.html').render(args)
+
+
+@server.route('/page1')
+async def page1(req):
+    args = {'app_name': app_name, 'page': 'Page 1'}
+    return Template('page1.html').render(args)
+
+
+@server.route('/page2')
+async def page2(req):
+    args = {'app_name': app_name, 'page': 'Page 2'}
+    return Template('page2.html').render(args)
 
 
 wifi_manager = WiFiManager()
@@ -108,6 +132,10 @@ async def main():
     # connect_wifi()
     pass
 
+def rmdir(dir):
+    for i in os.listdir(dir):
+        os.remove('{}/{}'.format(dir,i))
+    os.rmdir(dir)
 
 if __name__ == '__main__':
     main()
