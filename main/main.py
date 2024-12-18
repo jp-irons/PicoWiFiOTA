@@ -8,29 +8,17 @@ import asyncio
 from microdot import Microdot, Response, send_file
 from microdot.utemplate import Template
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-wlan_sta = network.WLAN(network.STA_IF)
-
-
-async def connect_to(ssid, password):
-    logger.debug('Trying to connect to %s...' % ssid)
-    wlan_sta.connect(ssid, password)
-    for retry in range(100):
-        connected = wlan_sta.isconnected()
-        if connected:
-            print()
-            return connected
-        await asyncio.sleep(0.1)
-        print('.', end='')
-    print()
+wlan = network.WLAN(network.STA_IF)
 
 
 class WiFiManager:
     def __init__(self, wlan_filename='WIFI_CONFIG.json'):
         self.wlan_filename = wlan_filename
         self.wlan_attributes = None
+        self.wlan_sta = wlan
         self.load()
 
     def load(self):
@@ -55,21 +43,38 @@ class WiFiManager:
     async def connect(self):
         logger.debug('connect()')
         wifi_credentials = self.wlan_attributes['WIFI']
-        wlan_sta.active(True)
+        self.wlan_sta.active(True)
         connected = False
-        if wlan_sta.isconnected():
-            logger.info('Connected: %s', wlan_sta.ifconfig())
+        if self.wlan_sta.isconnected():
+            logger.info('Connected: %s', self.wlan_sta.ifconfig())
             return True
         for ssid, password in wifi_credentials.items():
-            connected = await connect_to(ssid, password)
+            connected = await self.connect_to(ssid, password)
             if connected:
-                logger.info('Connected to %s %s', ssid, wlan_sta.ifconfig())
+                logger.info('Connected to %s %s', ssid, self.wlan_sta.ifconfig())
                 return connected
             else:
                 logger.info('Failed to connect to ' + ssid)
         logger.debug('Need to set up AP and get credentials')
         return connected
 
+    async def connect_to(self, ssid, password):
+        logger.debug('Trying to connect to %s...' % ssid)
+        self.wlan_sta.connect(ssid, password)
+        for retry in range(100):
+            connected = self.wlan_sta.isconnected()
+            if connected:
+                print()
+                return connected
+            await asyncio.sleep(0.1)
+            print('.', end='')
+        print()
+
+    def get_host(self):
+        return self.wlan_sta.ifconfig()[0]
+
+
+wifi_manager = WiFiManager()
 
 server = Microdot()
 Response.default_content_type = 'text/html'
@@ -77,9 +82,9 @@ app_name = "Pi Pico Embedded"
 
 def get_args(page):
     wifi = 'Not connected'
-    if wlan_sta.isconnected():
-        wifi = wlan_sta.config('ssid')
-    ifconfig = wlan_sta.ifconfig()
+    if wifi_manager.wlan_sta.isconnected():
+        wifi = wifi_manager.wlan_sta.config('ssid')
+    ifconfig = wifi_manager.wlan_sta.ifconfig()
     ssids = wifi_manager.wlan_attributes['WIFI'].keys()
     args = {'app_name': app_name,
             'page': page,
@@ -115,15 +120,13 @@ async def remove_ssid(req):
         ssid = key
         action = form[ssid]
         args['ssid'] = ssid
+        logger.debug('remove_ssid - action: ' + action + ', ssid: ' + ssid)
         if 'Delete' == action:
-            print('Delete', ssid)
             return Template('remove_ssid.html').render(args)
         if 'Confirm' == action:
-            print('Confirm', ssid)
             wifi_manager.wlan_attributes['WIFI'].pop(ssid)
             return Template('configure_wifi.html').render(args)
         if 'Cancel' == action:
-            print('Cancel', ssid)
             return Template('configure_wifi.html').render(args)
     return Template('page2.html').render(args)
 
@@ -133,22 +136,39 @@ async def page2(req):
     return Template('page2.html').render(args)
 
 
-wifi_manager = WiFiManager()
 
 async def run_app():
     await wifi_manager.connect()
     logger.debug('starting app')
+    ssl = None
+    port = 80
+    if ssl is None:
+        if port == 80:
+            logger.info('http://'+wifi_manager.get_host())
+        else:
+            logger.info('http://' + wifi_manager.get_host() + ':' + str(port))
+    else:
+        if port == 443:
+            logger.info('https://'+wifi_manager.get_host())
+        else:
+            logger.info('http://' + wifi_manager.get_host() + ':' + str(port))
+
     await asyncio.gather(server.start_server(port=80))
     logger.debug('app finished')
 
 
 def disconnect_wifi():
-    wlan_sta.active(True)
-    if not wlan_sta.isconnected():
+    wifi_manager.wlan_sta.active(True)
+    if not wifi_manager.wlan_sta.isconnected():
         return None
-    wlan_sta.disconnect()
+    wifi_manager.wlan_sta.disconnect()
 
 def execute():
+    recompile()
+    asyncio.run(run_app())
+
+def debug():
+    logging.basicConfig(level=logging.DEBUG)
     recompile()
     asyncio.run(run_app())
 
@@ -166,7 +186,7 @@ def recompile(dir='templates'):
     for i in os.listdir(dir):
         filename = str(i)
         if '.py' in filename:
-            print('Removed ', filename)
+            logger.info('Removed ' + filename)
             os.remove('{}/{}'.format(dir,i))
 
 def rmtemplates():
