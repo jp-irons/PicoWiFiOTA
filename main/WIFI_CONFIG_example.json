@@ -1,16 +1,13 @@
 {
   "WIFI" : [
     {
-      "SSID": "copy this file to WIFI_config.json",
-      "PASSWORD": "password"
+      "copy this file to WIFI_config.json - SSID": "password"
     },
     {
-      "SSID": "ssid2",
-      "PASSWORD": "password"
+      "ssid2": "password"
     }
   ],
   "WAP" :  {
-      "SSID": "picowifi",
-      "PASSWORD": "p1c0wifi"
+      "picowifi": "p1c0wifi"
   }
 }

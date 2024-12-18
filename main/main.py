@@ -60,9 +60,7 @@ class WiFiManager:
         if wlan_sta.isconnected():
             logger.info('Connected: %s', wlan_sta.ifconfig())
             return True
-        for wap_credentials in wifi_credentials:
-            ssid = wap_credentials['SSID']
-            password = wap_credentials['PASSWORD']
+        for ssid, password in wifi_credentials.items():
             connected = await connect_to(ssid, password)
             if connected:
                 logger.info('Connected to %s %s', ssid, wlan_sta.ifconfig())
@@ -77,35 +75,61 @@ server = Microdot()
 Response.default_content_type = 'text/html'
 app_name = "Pi Pico Embedded"
 
+def get_args(page):
+    wifi = 'Not connected'
+    if wlan_sta.isconnected():
+        wifi = wlan_sta.config('ssid')
+    ifconfig = wlan_sta.ifconfig()
+    ssids = wifi_manager.wlan_attributes['WIFI'].keys()
+    args = {'app_name': app_name,
+            'page': page,
+            'wifi': wifi,
+            'ifconfig': ifconfig,
+            'ssids': ssids}
+    return args
+
 
 # @server.route('/', methods=['GET', 'POST'])
 # async def index(req):
-#     return Template('index.html').render(page='Index')
+#     return Template('home.html').render(page='Index')
 #
 #
-
-@server.route('/static/<path:path>')
-async def static(request, path):
-    if '..' in path:
-        # directory traversal is not allowed
-        return 'Not found', 404
-    return send_file('static/' + path)
 
 @server.route('/')
-async def index(req):
-    args = {'app_name': app_name, 'page': 'Index'}
-    return Template('index.html').render(args)
+async def home(req):
+    args = get_args(page='Home')
+    return Template('home.html').render(args)
 
 
-@server.route('/page1')
-async def page1(req):
-    args = {'app_name': app_name, 'page': 'Page 1'}
-    return Template('page1.html').render(args)
+@server.route('/configure_wifi', methods=['GET', 'POST'])
+async def configure_wifi(req):
+    args = get_args(page='Configure Wi-Fi')
+    return Template('configure_wifi.html').render(args)
 
+@server.route('/remove_ssid', methods=['GET', 'POST'])
+async def remove_ssid(req):
+    args = get_args(page='Remove SSID')
+    form = req.form
+    args['form'] = form
+    for key, value in form.items():
+        ssid = key
+        action = form[ssid]
+        args['ssid'] = ssid
+        if 'Delete' == action:
+            print('Delete', ssid)
+            return Template('remove_ssid.html').render(args)
+        if 'Confirm' == action:
+            print('Confirm', ssid)
+            wifi_manager.wlan_attributes['WIFI'].pop(ssid)
+            return Template('configure_wifi.html').render(args)
+        if 'Cancel' == action:
+            print('Cancel', ssid)
+            return Template('configure_wifi.html').render(args)
+    return Template('page2.html').render(args)
 
 @server.route('/page2')
 async def page2(req):
-    args = {'app_name': app_name, 'page': 'Page 2'}
+    args = get_args(page='Page 2')
     return Template('page2.html').render(args)
 
 
@@ -125,6 +149,7 @@ def disconnect_wifi():
     wlan_sta.disconnect()
 
 def execute():
+    recompile()
     asyncio.run(run_app())
 
 
@@ -136,6 +161,16 @@ def rmdir(dir):
     for i in os.listdir(dir):
         os.remove('{}/{}'.format(dir,i))
     os.rmdir(dir)
+
+def recompile(dir='templates'):
+    for i in os.listdir(dir):
+        filename = str(i)
+        if '.py' in filename:
+            print('Removed ', filename)
+            os.remove('{}/{}'.format(dir,i))
+
+def rmtemplates():
+    rmdir('templates')
 
 if __name__ == '__main__':
     main()

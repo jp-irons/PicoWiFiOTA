@@ -1,0 +1,40 @@
+{% args args %}
+{% include 'base_header.html' %}
+{% include 'actions.html' %}
+<!-- configure_wifi.html -->
+<div class="column middle-right content" style="background-color:#bbb;">
+    <table style="overflow-x:auto;">
+    <tr>
+        <td>Application</td>
+        <td>{{ args['app_name'] }}</td>
+    </tr>
+    <tr>
+        <td>Wi-Fi network</td>
+        <td>{{ args['wifi'] }}</td>
+    </tr>
+    <tr>
+        <td>Address</td>
+        <td>{{ args['ifconfig'][0] }}</td>
+    </tr>
+<form action="/remove_ssid" method="post">
+    <input type="hidden" name="request">
+{% set i = 0 %}
+{% for ssid in args['ssids'] %}
+    {% set i = i+1 %}
+    <tr>
+        <td>{% if i==1 %}SSIDs{% endif %}</td>
+        <td>{{ ssid }}</td>
+        <td> <input type="submit" name="{{ ssid }}" value="Delete"></td>
+    </tr>
+{% endfor %}
+</form>
+<form action="/add_wifi" method="post">
+    <tr>
+        <td>Visible</td>
+        <td></td>
+        <td><input type="submit" name="ssid" value="Add" /></td>
+    </tr>
+</form>
+    </table>
+</div>
+{% include 'base_footer.html' %}
