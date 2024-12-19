@@ -3,22 +3,21 @@ import network
 import json
 import os
 import logging as logging
-import asyncio
+# import asyncio
+import uasyncio as asyncio
 
 from microdot import Microdot, Response, send_file
 from microdot.utemplate import Template
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-wlan = network.WLAN(network.STA_IF)
 
-
-class WiFiManager:
+class WiFiManager():
     def __init__(self, wlan_filename='WIFI_CONFIG.json'):
         self.wlan_filename = wlan_filename
         self.wlan_attributes = None
-        self.wlan_sta = wlan
+        self.wlan_sta = network.WLAN(network.STA_IF)
         self.load()
 
     def load(self):
@@ -40,7 +39,7 @@ class WiFiManager:
             with open(self.wlan_filename, 'w') as f:
                 json.dump(self.wlan_attributes, f)
 
-    async def connect(self):
+    async def setup_connection(self):
         logger.debug('connect()')
         wifi_credentials = self.wlan_attributes['WIFI']
         self.wlan_sta.active(True)
@@ -69,6 +68,12 @@ class WiFiManager:
             await asyncio.sleep(0.1)
             print('.', end='')
         print()
+
+    async def scan_for_networks(self):
+        logger.debug('Scanning for Wi-Fi networks')
+        networks = self.wlan_sta.scan()
+        return networks
+
 
     def get_host(self):
         return self.wlan_sta.ifconfig()[0]
@@ -109,6 +114,18 @@ async def home(req):
 @server.route('/configure_wifi', methods=['GET', 'POST'])
 async def configure_wifi(req):
     args = get_args(page='Configure Wi-Fi')
+    waps = await wifi_manager.scan_for_networks()
+    waps.sort(reverse=True, key=lambda x: x[3])
+    wap_list = {}
+    ssid_list = []
+    for wap in waps:
+        ssid_name = str(wap[0], 'utf-8')
+        ssid_signal = wap[3]
+        if ssid_name is not '' and ssid_name not in ssid_list: # hidden
+            ssid_list.append(ssid_name)
+            wap_list[ssid_name] = ssid_signal
+    args['waps'] = wap_list
+    args['ssid_list'] = ssid_list
     return Template('configure_wifi.html').render(args)
 
 @server.route('/remove_ssid', methods=['GET', 'POST'])
@@ -138,7 +155,7 @@ async def page2(req):
 
 
 async def run_app():
-    await wifi_manager.connect()
+    await wifi_manager.setup_connection()
     logger.debug('starting app')
     ssl = None
     port = 80
@@ -168,7 +185,7 @@ def execute():
     asyncio.run(run_app())
 
 def debug():
-    logging.basicConfig(level=logging.DEBUG)
+    logger.setLevel(logging.DEBUG)
     recompile()
     asyncio.run(run_app())
 

@@ -6,7 +6,7 @@
     <table style="overflow-x:auto;">
     <tr>
         <td>Application</td>
-        <td>{{ args['app_name'] }}</td>
+        <td colspan="5">{{ args['app_name'] }}</td>
     </tr>
     <tr>
         <td>Wi-Fi network</td>
@@ -16,6 +16,7 @@
         <td>Address</td>
         <td>{{ args['ifconfig'][0] }}</td>
     </tr>
+    <tr></tr>
 <form action="/remove_ssid" method="post">
     <input type="hidden" name="request">
 {% set i = 0 %}
@@ -23,17 +24,26 @@
     {% set i = i+1 %}
     <tr>
         <td>{% if i==1 %}SSIDs{% endif %}</td>
-        <td>{{ ssid }}</td>
-        <td> <input type="submit" name="{{ ssid }}" value="Delete"></td>
+        <td colspan="3">{{ ssid }}</td>
+        <td align="right"> <input type="submit" name="{{ ssid }}" value="Delete"></td>
     </tr>
 {% endfor %}
 </form>
 <form action="/add_wifi" method="post">
-    <tr>
-        <td>Visible</td>
-        <td></td>
-        <td><input type="submit" name="ssid" value="Add" /></td>
+    <tr></tr>
+{% set i = 0 %}
+{% set ssid_list = args['ssid_list'] %}
+{% set waps = args['waps'] %}
+{% for ssid in ssid_list %}
+    {% set i = i+1 %}
+   <tr>
+        <td>{% if i==1 %}Visible networks{% endif %}</td>
+        <td>{{ ssid }}</td>
+        <td>{{ waps[ssid] }}dB</td>
+        <td align="right"><input type="password" name="password"/></td>
+        <td align="right"><input type="submit" name="ssid" value="Add" /></td>
     </tr>
+{% endfor %}
 </form>
     </table>
 </div>
