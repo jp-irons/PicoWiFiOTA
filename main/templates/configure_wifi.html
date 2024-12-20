@@ -9,14 +9,11 @@
         <td>{{ args['app_name'] }}</td>
     </tr>
     <tr>
-        <td>Wi-Fi network</td>
-        <td>{{ args['wifi'] }}</td>
-    </tr>
-    <tr>
-        <td>Address</td>
+        <td>Connected</td>
+        <td colspan="2">{{ args['wifi'] }}</td>
         <td>{{ args['ifconfig'][0] }}</td>
     </tr>
-    <tr></tr>
+    <tr style="height:10px"></tr>
 {% set i = 0 %}
 {% for ssid in args['ssids'] %}
     {% set i = i+1 %}
@@ -25,21 +22,22 @@
     <tr>
         <td>{% if i==1 %}SSIDs{% endif %}</td>
         <td colspan="3">{{ ssid }}</td>
-        <td align="right"> <input type="submit" name="action" value="Delete"></td>
+        <td align="right"> <input type="submit" name="action" value="Remove"></td>
     </tr>
 </form>
 {% endfor %}
-<form action="/save_config" method="post">
+<form action="/update_config" method="post">
     <tr>
-        <td colspan="4">Save configuration</td>
-        <td align="right"> <input type="submit" name="action" value="Save"></td>
+        <td colspan="4"></td>
+        <td align="right"> <input type="submit" name="action" value="Reload"> <input type="submit" name="action" value="Save"></td>
     </tr>
 </form>
+    <tr style="height:10px"></tr>
 <form action="/add_ssid" method="post">
     <tr>
         <td>Network</td>
-        <td colspan="2">SSID <input type="text" name="ssid"/></td>
-        <td align="right">Password <input type="password" name="password"/></td>
+        <td colspan="2"><input type="text" placeholder="<SSID>" name="ssid"/></td>
+        <td align="right"><input type="password" placeholder="<password>" name="password"/></td>
         <td align="right"><input type="submit" name="action" value="Add" /></td>
     </tr>
 </form>
@@ -51,10 +49,10 @@
 <form action="/add_ssid" method="post">
     <input type="hidden" name="ssid" value="{{ ssid  }}">
     <tr>
-        <td>{% if i==1 %}Visible networks{% endif %}</td>
+        <td>{% if i==1 %}Visible{% endif %}</td>
         <td>{{ ssid }}</td>
         <td>{{ wap[1] }}dB</td>
-        <td align="right">Password <input type="password" name="password"/></td>
+        <td align="right">Password <input type="password" placeholder="<password>" name="password"/></td>
         <td align="right"><input type="submit" name="action" value="Add" /></td>
     </tr>
 </form>

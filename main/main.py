@@ -21,6 +21,7 @@ class WiFiManager():
         self.load()
 
     def load(self):
+        logger.debug('load')
         if self.wlan_filename in os.listdir():
             with open(self.wlan_filename) as f:
                 self.wlan_attributes = json.load(f)
@@ -37,6 +38,11 @@ class WiFiManager():
             # save the current version
             with open(self.wlan_filename, 'w') as f:
                 json.dump(self.wlan_attributes, f)
+
+    def save(self):
+        logger.debug('save')
+        with open(self.wlan_filename, 'w') as f:
+            json.dump(self.wlan_attributes, f)
 
     async def setup_connection(self):
         logger.debug('connect()')
@@ -97,7 +103,7 @@ server = Microdot()
 Response.default_content_type = 'text/html'
 app_name = "Pi Pico Embedded"
 
-def get_args(page):
+def get_args(page, form=None):
     wifi = 'Not connected'
     if wifi_manager.wlan_sta.isconnected():
         wifi = wifi_manager.wlan_sta.config('ssid')
@@ -107,7 +113,8 @@ def get_args(page):
             'page': page,
             'wifi': wifi,
             'ifconfig': ifconfig,
-            'ssids': ssids}
+            'ssids': ssids,
+            'form': form}
     return args
 
 
@@ -123,16 +130,9 @@ async def home(req):
     return Template('home.html').render(args)
 
 
-@server.route('/configure_wifi', methods=['GET', 'POST'])
-async def configure_wifi(req):
-    args = get_args(page='Configure Wi-Fi')
-    args['waps'] = await wifi_manager.scan_for_waps_sorted()
-    return Template('configure_wifi.html').render(args)
-
 @server.route('/add_ssid', methods=['GET', 'POST'])
 async def add_ssid(req):
     logger.debug('add_ssid')
-    args = get_args(page='Add SSID')
     form = req.form
     action = form['action']
     logger.debug('add_ssid ' + action)
@@ -141,36 +141,43 @@ async def add_ssid(req):
         logger.debug('add_ssid ' + ssid)
         password = form['password']
         wifi_manager.wlan_attributes['WIFI'][form['ssid']] = form['password']
-    args['form'] = form
+    args = get_args(page='Add SSID', form=form)
+    args['waps'] = await wifi_manager.scan_for_waps_sorted()
+    return Template('configure_wifi.html').render(args)
+
+@server.route('/configure_wifi', methods=['GET', 'POST'])
+async def configure_wifi(req):
+    args = get_args(page='Configure Wi-Fi')
     args['waps'] = await wifi_manager.scan_for_waps_sorted()
     return Template('configure_wifi.html').render(args)
 
 @server.route('/remove_ssid', methods=['GET', 'POST'])
 async def remove_ssid(req):
-    args = get_args(page='Remove SSID')
+    logger.debug('remove_ssid ')
     form = req.form
-    args['form'] = form
-    print(form)
-    action = form['action']
-    logger.debug('remove_ssid: ' + action)
-    if 'Delete' == action:
-        ssid = form['ssid']
-        logger.debug('remove_ssid deleting '  + ', ssid: ' + ssid )
-        args['ssid'] = ssid
-        return Template('remove_ssid.html').render(args)
-    if 'Confirm' == action:
-        ssid = form['ssid']
-        args['ssid'] = ssid
-        logger.debug('remove_ssid confirmed delete '  + ', ssid: ' + ssid )
+    ssid = form['ssid']
+    logger.debug('remove_ssid removing ssid ' + ssid )
+    if ssid in wifi_manager.wlan_attributes['WIFI']:
         wifi_manager.wlan_attributes['WIFI'].pop(ssid)
-        args['waps'] = await wifi_manager.scan_for_waps_sorted()
-        return Template('configure_wifi.html').render(args)
-    if 'Cancel' == action:
-        logger.debug('remove_ssid Cancel')
-        args['waps'] = await wifi_manager.scan_for_waps_sorted()
-        return Template('configure_wifi.html').render(args)
-    logger.debug('remove_ssid default')
-    return Template('page2.html').render(args)
+    args = get_args(page='Remove SSID', form=form)
+    args['waps'] = await wifi_manager.scan_for_waps_sorted()
+    args['ssid'] = ssid
+    return Template('configure_wifi.html').render(args)
+
+@server.route('/update_config', methods=['GET', 'POST'])
+async def update_config(req):
+    logger.debug('update_config ')
+    form = req.form
+    action = form['action']
+    if 'Reload' == action:
+        logger.debug('update_config Reload')
+        wifi_manager.load()
+    if 'Save' == action:
+        logger.debug('update_config Save')
+        wifi_manager.save()
+    args = get_args(page='Configure Wi-Fi')
+    args['waps'] = await wifi_manager.scan_for_waps_sorted()
+    return Template('configure_wifi.html').render(args)
 
 @server.route('/page2')
 async def page2(req):
