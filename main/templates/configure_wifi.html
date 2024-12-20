@@ -2,11 +2,11 @@
 {% include 'base_header.html' %}
 {% include 'actions.html' %}
 <!-- configure_wifi.html -->
-<div class="column middle-right content" style="background-color:#bbb;">
+<div class="column middle-right content">
     <table style="overflow-x:auto;">
     <tr>
         <td>Application</td>
-        <td colspan="5">{{ args['app_name'] }}</td>
+        <td>{{ args['app_name'] }}</td>
     </tr>
     <tr>
         <td>Wi-Fi network</td>
@@ -17,34 +17,48 @@
         <td>{{ args['ifconfig'][0] }}</td>
     </tr>
     <tr></tr>
-<form action="/remove_ssid" method="post">
-    <input type="hidden" name="request">
 {% set i = 0 %}
 {% for ssid in args['ssids'] %}
     {% set i = i+1 %}
+<form action="/remove_ssid" method="post">
+    <input type="hidden" name="ssid" value="{{ ssid  }}">
     <tr>
         <td>{% if i==1 %}SSIDs{% endif %}</td>
         <td colspan="3">{{ ssid }}</td>
-        <td align="right"> <input type="submit" name="{{ ssid }}" value="Delete"></td>
+        <td align="right"> <input type="submit" name="action" value="Delete"></td>
     </tr>
-{% endfor %}
 </form>
-<form action="/add_wifi" method="post">
-    <tr></tr>
+{% endfor %}
+<form action="/save_config" method="post">
+    <tr>
+        <td colspan="4">Save configuration</td>
+        <td align="right"> <input type="submit" name="action" value="Save"></td>
+    </tr>
+</form>
+<form action="/add_ssid" method="post">
+    <tr>
+        <td>Network</td>
+        <td colspan="2">SSID <input type="text" name="ssid"/></td>
+        <td align="right">Password <input type="password" name="password"/></td>
+        <td align="right"><input type="submit" name="action" value="Add" /></td>
+    </tr>
+</form>
 {% set i = 0 %}
-{% set ssid_list = args['ssid_list'] %}
 {% set waps = args['waps'] %}
-{% for ssid in ssid_list %}
+{% for wap in waps %}
     {% set i = i+1 %}
-   <tr>
+    {% set ssid = wap[0] %}
+<form action="/add_ssid" method="post">
+    <input type="hidden" name="ssid" value="{{ ssid  }}">
+    <tr>
         <td>{% if i==1 %}Visible networks{% endif %}</td>
         <td>{{ ssid }}</td>
-        <td>{{ waps[ssid] }}dB</td>
-        <td align="right"><input type="password" name="password"/></td>
-        <td align="right"><input type="submit" name="ssid" value="Add" /></td>
+        <td>{{ wap[1] }}dB</td>
+        <td align="right">Password <input type="password" name="password"/></td>
+        <td align="right"><input type="submit" name="action" value="Add" /></td>
     </tr>
-{% endfor %}
 </form>
+{% endfor %}
     </table>
 </div>
 {% include 'base_footer.html' %}

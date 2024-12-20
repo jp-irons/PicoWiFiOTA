@@ -30,8 +30,7 @@ class WiFiManager():
                 'WIFI': []
                 # "WIFI": [
                 #     {
-                #         'SSID': 'jamnethome',
-                #         "PASSWORD": 'password'
+                #         'myssid' : 'password'
                 #     }
                 # ]
             }
@@ -69,7 +68,7 @@ class WiFiManager():
             print('.', end='')
         print()
 
-    async def scan_for_networks(self):
+    async def scan_for_waps(self):
         logger.debug('Scanning for Wi-Fi networks')
         networks = self.wlan_sta.scan()
         return networks
@@ -77,6 +76,19 @@ class WiFiManager():
 
     def get_host(self):
         return self.wlan_sta.ifconfig()[0]
+
+    async def scan_for_waps_sorted(self):
+        waps = await self.scan_for_waps()
+        waps.sort(reverse=True, key=lambda x: x[3])
+        wap_list = []
+        ssid_list = []
+        for wap in waps:
+            ssid_name = str(wap[0], 'utf-8')
+            ssid_signal = wap[3]
+            if ssid_name is not '' and ssid_name not in ssid_list:  # hidden
+                ssid_list.append(ssid_name)
+                wap_list.append((ssid_name, ssid_signal))
+        return wap_list
 
 
 wifi_manager = WiFiManager()
@@ -114,18 +126,23 @@ async def home(req):
 @server.route('/configure_wifi', methods=['GET', 'POST'])
 async def configure_wifi(req):
     args = get_args(page='Configure Wi-Fi')
-    waps = await wifi_manager.scan_for_networks()
-    waps.sort(reverse=True, key=lambda x: x[3])
-    wap_list = {}
-    ssid_list = []
-    for wap in waps:
-        ssid_name = str(wap[0], 'utf-8')
-        ssid_signal = wap[3]
-        if ssid_name is not '' and ssid_name not in ssid_list: # hidden
-            ssid_list.append(ssid_name)
-            wap_list[ssid_name] = ssid_signal
-    args['waps'] = wap_list
-    args['ssid_list'] = ssid_list
+    args['waps'] = await wifi_manager.scan_for_waps_sorted()
+    return Template('configure_wifi.html').render(args)
+
+@server.route('/add_ssid', methods=['GET', 'POST'])
+async def add_ssid(req):
+    logger.debug('add_ssid')
+    args = get_args(page='Add SSID')
+    form = req.form
+    action = form['action']
+    logger.debug('add_ssid ' + action)
+    if 'Add' == action:
+        ssid = form['ssid']
+        logger.debug('add_ssid ' + ssid)
+        password = form['password']
+        wifi_manager.wlan_attributes['WIFI'][form['ssid']] = form['password']
+    args['form'] = form
+    args['waps'] = await wifi_manager.scan_for_waps_sorted()
     return Template('configure_wifi.html').render(args)
 
 @server.route('/remove_ssid', methods=['GET', 'POST'])
@@ -133,18 +150,26 @@ async def remove_ssid(req):
     args = get_args(page='Remove SSID')
     form = req.form
     args['form'] = form
-    for key, value in form.items():
-        ssid = key
-        action = form[ssid]
+    print(form)
+    action = form['action']
+    logger.debug('remove_ssid: ' + action)
+    if 'Delete' == action:
+        ssid = form['ssid']
+        logger.debug('remove_ssid deleting '  + ', ssid: ' + ssid )
         args['ssid'] = ssid
-        logger.debug('remove_ssid - action: ' + action + ', ssid: ' + ssid)
-        if 'Delete' == action:
-            return Template('remove_ssid.html').render(args)
-        if 'Confirm' == action:
-            wifi_manager.wlan_attributes['WIFI'].pop(ssid)
-            return Template('configure_wifi.html').render(args)
-        if 'Cancel' == action:
-            return Template('configure_wifi.html').render(args)
+        return Template('remove_ssid.html').render(args)
+    if 'Confirm' == action:
+        ssid = form['ssid']
+        args['ssid'] = ssid
+        logger.debug('remove_ssid confirmed delete '  + ', ssid: ' + ssid )
+        wifi_manager.wlan_attributes['WIFI'].pop(ssid)
+        args['waps'] = await wifi_manager.scan_for_waps_sorted()
+        return Template('configure_wifi.html').render(args)
+    if 'Cancel' == action:
+        logger.debug('remove_ssid Cancel')
+        args['waps'] = await wifi_manager.scan_for_waps_sorted()
+        return Template('configure_wifi.html').render(args)
+    logger.debug('remove_ssid default')
     return Template('page2.html').render(args)
 
 @server.route('/page2')
