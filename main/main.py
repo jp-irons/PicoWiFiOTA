@@ -114,6 +114,16 @@ class WiFiManager():
         for i, ssid in enumerate(self.ssids):
             self.ssids[i][0] = str(i)
 
+    def move_ssid_to(self, index, new_index):
+        if (index < 0 or
+            new_index < 0 or
+            index > len(self.ssids) or
+            new_index > len(self.ssids)):
+            return
+        this_ssid = self.ssids.pop(index)
+        self.ssids.insert(new_index, this_ssid)
+        self.update_ssid_order()
+
 
 wifi_manager = WiFiManager()
 
@@ -157,9 +167,7 @@ async def add_ssid(req):
         new_ssid = form['ssid']
         logger.debug('add_ssid ' + new_ssid)
         new_password = form['password']
-        print(wifi_manager.ssids)
         wifi_manager.insert_ssid(new_ssid, new_password)
-        print(wifi_manager.ssids)
     args = get_args(page='Add SSID', form=form)
     args['waps'] = await wifi_manager.scan_for_waps_sorted()
     return Template('configure_wifi.html').render(args)
@@ -170,15 +178,24 @@ async def configure_wifi(req):
     args['waps'] = await wifi_manager.scan_for_waps_sorted()
     return Template('configure_wifi.html').render(args)
 
-@server.route('/remove_ssid', methods=['GET', 'POST'])
-async def remove_ssid(req):
+@server.route('/update_ssid', methods=['GET', 'POST'])
+async def update_ssid(req):
     logger.debug('remove_ssid ')
     form = req.form
     ssid_index = form['ssid_index']
     try:
         index = int(ssid_index)
-        logger.debug('remove_ssid removing ssid ' + str(index) )
-        wifi_manager.ssids.pop(index)
+        action = form['action']
+        if 'Remove' == action:
+            logger.debug('update_ssid removing ssid ' + str(index) )
+            wifi_manager.ssids.pop(index)
+        if 'v' == action:
+            logger.debug('update_ssid ssid down ' + str(index))
+            wifi_manager.move_ssid_to(index, index+1)
+        if '^' == action:
+            logger.debug('update_ssid ssid up ' + str(index))
+            wifi_manager.move_ssid_to(index, index-1)
+
     except ValueError:
         logger.error('remove ssid invalid index' + ssid_index)
     except IndexError:

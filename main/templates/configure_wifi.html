@@ -17,12 +17,15 @@
 {% set i = 0 %}
 {% for credentials in args['ssids'] %}
     {% set ssid = credentials[1] %}
-<form action="/remove_ssid" method="post">
+<form action="/update_ssid" method="post">
     <input type="hidden" name="ssid_index" value="{{ i }}">
     <tr>
         <td>{% if i==0 %}SSIDs{% endif %}</td>
         <td colspan="3">{{ ssid }}</td>
-        <td align="right"> <input type="submit" name="action" value="Remove"></td>
+        <td align="right">
+            <input type="submit" name="action" value="^">
+            <input type="submit" name="action" value="v">
+            <input type="submit" name="action" value="Remove"></td>
     </tr>
 </form>
     {% set i = i+1 %}
