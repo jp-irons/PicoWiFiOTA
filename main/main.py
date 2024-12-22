@@ -17,8 +17,12 @@ class WiFiManager():
     def __init__(self, wlan_filename='WIFI_CONFIG.json'):
         self.wlan_filename = wlan_filename
         self.wlan_attributes = None
+        self.ssids = None
+        self.ssids = None
         self.wlan_sta = network.WLAN(network.STA_IF)
+        self.wlan_sta.disconnect()
         self.load()
+
 
     def load(self):
         logger.debug('load')
@@ -38,9 +42,13 @@ class WiFiManager():
             # save the current version
             with open(self.wlan_filename, 'w') as f:
                 json.dump(self.wlan_attributes, f)
+        self.ssids = list(self.wlan_attributes['WIFI'])
+        self.ssids.sort(key=lambda x: x[0])
 
     def save(self):
         logger.debug('save')
+        self.update_ssid_order()
+        self.wlan_attributes['WIFI'] = self.ssids
         with open(self.wlan_filename, 'w') as f:
             json.dump(self.wlan_attributes, f)
 
@@ -52,7 +60,9 @@ class WiFiManager():
         if self.wlan_sta.isconnected():
             logger.info('Connected: %s', self.wlan_sta.ifconfig())
             return True
-        for ssid, password in wifi_credentials.items():
+        for credentials in self.ssids:
+            ssid = credentials[1]
+            password = credentials[2]
             connected = await self.connect_to(ssid, password)
             if connected:
                 logger.info('Connected to %s %s', ssid, self.wlan_sta.ifconfig())
@@ -96,6 +106,14 @@ class WiFiManager():
                 wap_list.append((ssid_name, ssid_signal))
         return wap_list
 
+    def insert_ssid(self, new_ssid, new_password):
+        self.ssids.insert(0, ['0', new_ssid, new_password])
+        self.update_ssid_order()
+
+    def update_ssid_order(self):
+        for i, ssid in enumerate(self.ssids):
+            self.ssids[i][0] = str(i)
+
 
 wifi_manager = WiFiManager()
 
@@ -108,7 +126,7 @@ def get_args(page, form=None):
     if wifi_manager.wlan_sta.isconnected():
         wifi = wifi_manager.wlan_sta.config('ssid')
     ifconfig = wifi_manager.wlan_sta.ifconfig()
-    ssids = wifi_manager.wlan_attributes['WIFI'].keys()
+    ssids = wifi_manager.ssids
     args = {'app_name': app_name,
             'page': page,
             'wifi': wifi,
@@ -124,7 +142,7 @@ def get_args(page, form=None):
 #
 #
 
-@server.route('/')
+@server.route('/', methods=['GET', 'POST'])
 async def home(req):
     args = get_args(page='Home')
     return Template('home.html').render(args)
@@ -135,12 +153,13 @@ async def add_ssid(req):
     logger.debug('add_ssid')
     form = req.form
     action = form['action']
-    logger.debug('add_ssid ' + action)
     if 'Add' == action:
-        ssid = form['ssid']
-        logger.debug('add_ssid ' + ssid)
-        password = form['password']
-        wifi_manager.wlan_attributes['WIFI'][form['ssid']] = form['password']
+        new_ssid = form['ssid']
+        logger.debug('add_ssid ' + new_ssid)
+        new_password = form['password']
+        print(wifi_manager.ssids)
+        wifi_manager.insert_ssid(new_ssid, new_password)
+        print(wifi_manager.ssids)
     args = get_args(page='Add SSID', form=form)
     args['waps'] = await wifi_manager.scan_for_waps_sorted()
     return Template('configure_wifi.html').render(args)
@@ -155,14 +174,19 @@ async def configure_wifi(req):
 async def remove_ssid(req):
     logger.debug('remove_ssid ')
     form = req.form
-    ssid = form['ssid']
-    logger.debug('remove_ssid removing ssid ' + ssid )
-    if ssid in wifi_manager.wlan_attributes['WIFI']:
-        wifi_manager.wlan_attributes['WIFI'].pop(ssid)
+    ssid_index = form['ssid_index']
+    try:
+        index = int(ssid_index)
+        logger.debug('remove_ssid removing ssid ' + str(index) )
+        wifi_manager.ssids.pop(index)
+    except ValueError:
+        logger.error('remove ssid invalid index' + ssid_index)
+    except IndexError:
+        logger.error('remove ssid index out of range' + ssid_index)
     args = get_args(page='Remove SSID', form=form)
     args['waps'] = await wifi_manager.scan_for_waps_sorted()
-    args['ssid'] = ssid
     return Template('configure_wifi.html').render(args)
+
 
 @server.route('/update_config', methods=['GET', 'POST'])
 async def update_config(req):
