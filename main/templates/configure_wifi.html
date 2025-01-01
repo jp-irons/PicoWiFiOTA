@@ -9,8 +9,15 @@
         <td>{{ args['app_name'] }}</td>
     </tr>
     <tr>
-        <td>Connected</td>
-        <td colspan="1">{{ args['wifi'] }}</td>
+        <td>AP</td>
+        <td colspan="1">{{ args['wifi_ap'] }}
+            {% if args['wifi_ap_connected'] %} running{% else %} not running{% endif %}</td>
+        <td>Password: {{ args['wifi_ap_password'] }} </td>
+        <td>AP starting {{ args['wifi_ap_required'] }} </td>
+    </tr>
+    <tr>
+        <td>Station</td>
+        <td colspan="1">{{ args['wifi_sta'] }}</td>
         <td>{{ args['ifconfig'][0] }}</td>
     </tr>
     <tr style="height:15px"></tr>

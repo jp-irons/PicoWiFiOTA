@@ -6,7 +6,7 @@ import logging as logging
 # import asyncio
 import uasyncio as asyncio
 
-from microdot import Microdot, Response, send_file
+from microdot import Microdot, Response
 from microdot.utemplate import Template
 
 logging.basicConfig(level=logging.DEBUG)
@@ -18,11 +18,16 @@ class WiFiManager():
         self.wlan_filename = wlan_filename
         self.wlan_attributes = None
         self.ssids = None
-        self.ssids = None
-        self.wlan_sta = network.WLAN(network.STA_IF)
-        self.wlan_sta.disconnect()
+        self.sta = network.WLAN(network.STA_IF)
+        self.sta.disconnect()
+        self.sta.active(False)
+        self.sta_connecting = False
+        self.ap = network.WLAN(network.AP_IF)
+        self.ap.disconnect()
+        self.ap.active(False)
         self.load()
-
+        if 'HOSTNAME' in self.wlan_attributes:
+            network.hostname(str(self.wlan_attributes['HOSTNAME']))
 
     def load(self):
         logger.debug('load')
@@ -32,12 +37,11 @@ class WiFiManager():
             f.close()
         else:
             self.wlan_attributes = {
-                'WIFI': []
-                # "WIFI": [
-                #     {
-                #         'myssid' : 'password'
-                #     }
-                # ]
+                'WIFI': [],
+                "HOSTNAME" : "pi_pico_w",
+                "PASSWORD" : "p1c0wifi",
+                "RUNWAP": "always",
+                "RUNWAP_CHOICES": ["always", "as needed", "never"]
             }
             # save the current version
             with open(self.wlan_filename, 'w') as f:
@@ -54,29 +58,31 @@ class WiFiManager():
 
     async def setup_connection(self):
         logger.debug('connect()')
-        wifi_credentials = self.wlan_attributes['WIFI']
-        self.wlan_sta.active(True)
+        self.sta.active(True)
         connected = False
-        if self.wlan_sta.isconnected():
-            logger.info('Connected: %s', self.wlan_sta.ifconfig())
+        if self.sta.isconnected():
+            logger.info('Connected: %s', self.sta.ifconfig())
             return True
+        self.sta_connecting = True
         for credentials in self.ssids:
             ssid = credentials[1]
             password = credentials[2]
             connected = await self.connect_to(ssid, password)
             if connected:
-                logger.info('Connected to %s %s', ssid, self.wlan_sta.ifconfig())
+                logger.info('Connected to %s %s', ssid, self.sta.ifconfig())
+                log_serverUrl()
                 return connected
             else:
                 logger.info('Failed to connect to ' + ssid)
-        logger.debug('Need to set up AP and get credentials')
+        logger.debug('No Wi-FI connection made')
+        self.sta_connecting = False
         return connected
 
     async def connect_to(self, ssid, password):
         logger.debug('Trying to connect to %s...' % ssid)
-        self.wlan_sta.connect(ssid, password)
-        for retry in range(100):
-            connected = self.wlan_sta.isconnected()
+        self.sta.connect(ssid, password)
+        for retry in range(50):
+            connected = self.sta.isconnected()
             if connected:
                 print()
                 return connected
@@ -86,21 +92,21 @@ class WiFiManager():
 
     async def scan_for_waps(self):
         logger.debug('Scanning for Wi-Fi networks')
-        networks = self.wlan_sta.scan()
+        networks = self.sta.scan()
         return networks
 
 
     def get_host(self):
-        return self.wlan_sta.ifconfig()[0]
+        return self.sta.ifconfig()[0]
 
     async def scan_for_waps_sorted(self):
-        waps = await self.scan_for_waps()
-        waps.sort(reverse=True, key=lambda x: x[3])
+        visible_ssids = await self.scan_for_waps()
+        visible_ssids.sort(reverse=True, key=lambda x: x[3])
         wap_list = []
         ssid_list = []
-        for wap in waps:
-            ssid_name = str(wap[0], 'utf-8')
-            ssid_signal = wap[3]
+        for visible_ssid in visible_ssids:
+            ssid_name = str(visible_ssid[0], 'utf-8')
+            ssid_signal = visible_ssid[3]
             if ssid_name is not '' and ssid_name not in ssid_list:  # hidden
                 ssid_list.append(ssid_name)
                 wap_list.append((ssid_name, ssid_signal))
@@ -124,22 +130,66 @@ class WiFiManager():
         self.ssids.insert(new_index, this_ssid)
         self.update_ssid_order()
 
+    async def run_wap_loop(self):
+        logger.debug('run_wap_loop')
+        while True:
+            if not self.ap_required():
+                self.ap.active(False)
+            else:
+                await self.start_ap()
+            await asyncio.sleep(4)
+
+    async def start_ap(self):
+        # ap is required
+        if self.ap.active():
+            return
+        ssid = wifi_manager.wlan_attributes['HOSTNAME']
+        password = wifi_manager.wlan_attributes['PASSWORD']
+        self.ap.config(essid=ssid, password=password)
+        self.ap.active(True)
+        while not self.ap.active():
+            await asyncio.sleep_ms(10)
+            print('.', end='')
+        print()
+        logger.info('AP active - SSID:' + ssid + ' password:' + password + ' IP:' + str(self.ap.ifconfig()[0]))
+
+    def ap_required(self):
+        # if ap required but not operational start ap
+        if self.wlan_attributes['RUNWAP'] == 'always':
+            return True
+        if self.sta_connecting:
+            return False
+        if self.wlan_attributes['RUNWAP'] == 'as needed':
+            return True
+        return False
+
 
 wifi_manager = WiFiManager()
 
+# TODO: fix server
 server = Microdot()
+# server = None
 Response.default_content_type = 'text/html'
 app_name = "Pi Pico Embedded"
 
 def get_args(page, form=None):
-    wifi = 'Not connected'
-    if wifi_manager.wlan_sta.isconnected():
-        wifi = wifi_manager.wlan_sta.config('ssid')
-    ifconfig = wifi_manager.wlan_sta.ifconfig()
+    wifi_sta = 'Not connected'
+    wifi_sta_connected = wifi_manager.sta.isconnected()
+    if wifi_sta_connected:
+        wifi_sta = wifi_manager.sta.config('ssid')
+    wifi_ap = wifi_manager.wlan_attributes["HOSTNAME"]
+    wifi_ap_password = wifi_manager.wlan_attributes["PASSWORD"]
+    wifi_ap_connected = wifi_manager.ap.isconnected()
+    ifconfig = wifi_manager.sta.ifconfig()
     ssids = wifi_manager.ssids
     args = {'app_name': app_name,
             'page': page,
-            'wifi': wifi,
+            'wifi_sta': wifi_sta,
+            'wifi_sta_connected': wifi_sta_connected,
+            'wifi_ap': wifi_ap,
+            'wifi_ap_password': wifi_ap_password,
+            'wifi_ap_connected': wifi_ap_connected,
+            'wifi_ap_required': wifi_manager.wlan_attributes["RUNWAP"],
             'ifconfig': ifconfig,
             'ssids': ssids,
             'form': form}
@@ -225,11 +275,7 @@ async def page2(req):
     args = get_args(page='Page 2')
     return Template('page2.html').render(args)
 
-
-
-async def run_app():
-    await wifi_manager.setup_connection()
-    logger.debug('starting app')
+def log_serverUrl():
     ssl = None
     port = 80
     if ssl is None:
@@ -243,15 +289,24 @@ async def run_app():
         else:
             logger.info('http://' + wifi_manager.get_host() + ':' + str(port))
 
-    await asyncio.gather(server.start_server(port=80))
+
+
+async def run_app():
+    logger.debug('starting app')
+    ssl = None
+    port = 80
+    await asyncio.gather(
+        wifi_manager.setup_connection(),
+        wifi_manager.run_wap_loop(),
+        server.start_server(port=port, ssl=ssl)
+    )
     logger.debug('app finished')
 
-
 def disconnect_wifi():
-    wifi_manager.wlan_sta.active(True)
-    if not wifi_manager.wlan_sta.isconnected():
+    wifi_manager.sta.active(True)
+    if not wifi_manager.sta.isconnected():
         return None
-    wifi_manager.wlan_sta.disconnect()
+    wifi_manager.sta.disconnect()
 
 def execute():
     recompile()
@@ -267,17 +322,18 @@ async def main():
     # connect_wifi()
     pass
 
-def rmdir(dir):
-    for i in os.listdir(dir):
-        os.remove('{}/{}'.format(dir,i))
-    os.rmdir(dir)
+def rmdir(dir_name):
+    for i in os.listdir(dir_name):
+        os.remove('{}/{}'.format(dir_name, i))
+    os.rmdir(dir_name)
 
-def recompile(dir='templates'):
-    for i in os.listdir(dir):
+def recompile(dir_name='templates'):
+    for i in os.listdir(dir_name):
+
         filename = str(i)
         if '.py' in filename:
             logger.info('Removed ' + filename)
-            os.remove('{}/{}'.format(dir,i))
+            os.remove('{}/{}'.format(dir_name,i))
 
 def rmtemplates():
     rmdir('templates')
