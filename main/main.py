@@ -190,6 +190,7 @@ def get_args(page, form=None):
             'wifi_ap_password': wifi_ap_password,
             'wifi_ap_connected': wifi_ap_connected,
             'wifi_ap_required': wifi_manager.wlan_attributes["RUNWAP"],
+            'wifi_ap_choices': wifi_manager.wlan_attributes["RUNWAP_CHOICES"],
             'ifconfig': ifconfig,
             'ssids': ssids,
             'form': form}
