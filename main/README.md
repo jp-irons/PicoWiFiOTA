@@ -18,7 +18,7 @@ To use this code:
 1. Add this to your main program code:
 
     ```python
-    from main.ota import OTAUpdater
+    from main_new.ota import OTAUpdater
     from WIFI_CONFIG import SSID, PASSWORD
 
     firmware_url = "https://raw.githubusercontent.com/<username>/<repo_name>/<branch_name>"

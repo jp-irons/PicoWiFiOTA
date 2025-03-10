@@ -2,15 +2,22 @@
 import network
 import json
 import os
-import logging as logging
+import logging
 # import asyncio
 import uasyncio as asyncio
-
-from microdot import Microdot, Response
-from microdot.utemplate import Template
+from phew import server
+from phew.template import render_template
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+APP_NAME = "Pi Pico Embedded"
+AP_DOMAIN = "pipico.net"
+
+AP_TEMPLATE_PATH = "ap_templates"
+APP_TEMPLATE_PATH = "app_templates"
+WIFI_FILE = "wifi.json"
+WIFI_MAX_ATTEMPTS = 3
 
 
 class WiFiManager():
@@ -166,11 +173,7 @@ class WiFiManager():
 
 wifi_manager = WiFiManager()
 
-# TODO: fix server
-server = Microdot()
-# server = None
-Response.default_content_type = 'text/html'
-app_name = "Pi Pico Embedded"
+#app_name = "Pi Pico Embedded"
 
 def get_args(page, form=None):
     wifi_sta = 'Not connected'
@@ -182,7 +185,7 @@ def get_args(page, form=None):
     wifi_ap_connected = wifi_manager.ap.isconnected()
     ifconfig = wifi_manager.sta.ifconfig()
     ssids = wifi_manager.ssids
-    args = {'app_name': app_name,
+    args = {'app_name': APP_NAME,
             'page': page,
             'wifi_sta': wifi_sta,
             'wifi_sta_connected': wifi_sta_connected,
@@ -198,83 +201,95 @@ def get_args(page, form=None):
 
 
 # @server.route('/', methods=['GET', 'POST'])
-# async def index(req):
+# async def curr_index(req):
 #     return Template('home.html').render(page='Index')
 #
 #
 
-@server.route('/', methods=['GET', 'POST'])
-async def home(req):
+# url parameter and template render
+@server.route("/", methods=["GET"])
+def home(request):
     args = get_args(page='Home')
-    return Template('home.html').render(args)
+    return render_template(f"{AP_TEMPLATE_PATH}/index.html", args = args)
 
+# catchall example
+@server.catchall()
+def catchall(request):
+  return "Not found", 404
 
-@server.route('/add_ssid', methods=['GET', 'POST'])
-async def add_ssid(req):
-    logger.debug('add_ssid')
-    form = req.form
-    action = form['action']
-    if 'Add' == action:
-        new_ssid = form['ssid']
-        logger.debug('add_ssid ' + new_ssid)
-        new_password = form['password']
-        wifi_manager.insert_ssid(new_ssid, new_password)
-    args = get_args(page='Add SSID', form=form)
-    args['waps'] = await wifi_manager.scan_for_waps_sorted()
-    return Template('configure_wifi.html').render(args)
-
-@server.route('/configure_wifi', methods=['GET', 'POST'])
-async def configure_wifi(req):
-    args = get_args(page='Configure Wi-Fi')
-    args['waps'] = await wifi_manager.scan_for_waps_sorted()
-    return Template('configure_wifi.html').render(args)
-
-@server.route('/update_ssid', methods=['GET', 'POST'])
-async def update_ssid(req):
-    logger.debug('remove_ssid ')
-    form = req.form
-    ssid_index = form['ssid_index']
-    try:
-        index = int(ssid_index)
-        action = form['action']
-        if 'Remove' == action:
-            logger.debug('update_ssid removing ssid ' + str(index) )
-            wifi_manager.ssids.pop(index)
-        if 'v' == action:
-            logger.debug('update_ssid ssid down ' + str(index))
-            wifi_manager.move_ssid_to(index, index+1)
-        if '^' == action:
-            logger.debug('update_ssid ssid up ' + str(index))
-            wifi_manager.move_ssid_to(index, index-1)
-
-    except ValueError:
-        logger.error('remove ssid invalid index' + ssid_index)
-    except IndexError:
-        logger.error('remove ssid index out of range' + ssid_index)
-    args = get_args(page='Remove SSID', form=form)
-    args['waps'] = await wifi_manager.scan_for_waps_sorted()
-    return Template('configure_wifi.html').render(args)
-
-
-@server.route('/update_config', methods=['GET', 'POST'])
-async def update_config(req):
-    logger.debug('update_config ')
-    form = req.form
-    action = form['action']
-    if 'Reload' == action:
-        logger.debug('update_config Reload')
-        wifi_manager.load()
-    if 'Save' == action:
-        logger.debug('update_config Save')
-        wifi_manager.save()
-    args = get_args(page='Configure Wi-Fi')
-    args['waps'] = await wifi_manager.scan_for_waps_sorted()
-    return Template('configure_wifi.html').render(args)
-
-@server.route('/page2')
-async def page2(req):
-    args = get_args(page='Page 2')
-    return Template('page2.html').render(args)
+# @server.catchall()
+# def my_catchall(request):
+#     print('my_catchall')
+#     logger.debug('my_catchall')
+#     return "No matching route", 404
+#
+#
+# @server.route('/add_ssid', methods=['GET', 'POST'])
+# async def add_ssid(req):
+#     logger.debug('add_ssid')
+#     form = req.form
+#     action = form['action']
+#     if 'Add' == action:
+#         new_ssid = form['ssid']
+#         logger.debug('add_ssid ' + new_ssid)
+#         new_password = form['password']
+#         wifi_manager.insert_ssid(new_ssid, new_password)
+#     args = get_args(page='Add SSID', form=form)
+#     args['waps'] = await wifi_manager.scan_for_waps_sorted()
+#     return Template('configure_wifi.html').render(args)
+#
+# @server.route('/configure_wifi', methods=['GET', 'POST'])
+# async def configure_wifi(req):
+#     args = get_args(page='Configure Wi-Fi')
+#     args['waps'] = await wifi_manager.scan_for_waps_sorted()
+#     return Template('configure_wifi.html').render(args)
+#
+# @server.route('/update_ssid', methods=['GET', 'POST'])
+# async def update_ssid(req):
+#     logger.debug('remove_ssid ')
+#     form = req.form
+#     ssid_index = form['ssid_index']
+#     try:
+#         index = int(ssid_index)
+#         action = form['action']
+#         if 'Remove' == action:
+#             logger.debug('update_ssid removing ssid ' + str(index) )
+#             wifi_manager.ssids.pop(index)
+#         if 'v' == action:
+#             logger.debug('update_ssid ssid down ' + str(index))
+#             wifi_manager.move_ssid_to(index, index+1)
+#         if '^' == action:
+#             logger.debug('update_ssid ssid up ' + str(index))
+#             wifi_manager.move_ssid_to(index, index-1)
+#
+#     except ValueError:
+#         logger.error('remove ssid invalid curr_index' + ssid_index)
+#     except IndexError:
+#         logger.error('remove ssid curr_index out of range' + ssid_index)
+#     args = get_args(page='Remove SSID', form=form)
+#     args['waps'] = await wifi_manager.scan_for_waps_sorted()
+#     return Template('configure_wifi.html').render(args)
+#
+#
+# @server.route('/update_config', methods=['GET', 'POST'])
+# async def update_config(req):
+#     logger.debug('update_config ')
+#     form = req.form
+#     action = form['action']
+#     if 'Reload' == action:
+#         logger.debug('update_config Reload')
+#         wifi_manager.load()
+#     if 'Save' == action:
+#         logger.debug('update_config Save')
+#         wifi_manager.save()
+#     args = get_args(page='Configure Wi-Fi')
+#     args['waps'] = await wifi_manager.scan_for_waps_sorted()
+#     return Template('configure_wifi.html').render(args)
+#
+# @server.route('/page2')
+# async def page2(req):
+#     args = get_args(page='Page 2')
+#     return Template('page2.html').render(args)
 
 def log_serverUrl():
     ssl = None
@@ -291,15 +306,17 @@ def log_serverUrl():
             logger.info('http://' + wifi_manager.get_host() + ':' + str(port))
 
 
+async def start_server(host = "0.0.0.0", port = 80):
+    logger.debug('start server')
+    server.run(host, port)
 
 async def run_app():
     logger.debug('starting app')
-    ssl = None
     port = 80
     await asyncio.gather(
         wifi_manager.setup_connection(),
         wifi_manager.run_wap_loop(),
-        server.start_server(port=port, ssl=ssl)
+        start_server(port=port)
     )
     logger.debug('app finished')
 
@@ -310,12 +327,10 @@ def disconnect_wifi():
     wifi_manager.sta.disconnect()
 
 def execute():
-    recompile()
     asyncio.run(run_app())
 
 def debug():
     logger.setLevel(logging.DEBUG)
-    recompile()
     asyncio.run(run_app())
 
 
@@ -328,15 +343,7 @@ def rmdir(dir_name):
         os.remove('{}/{}'.format(dir_name, i))
     os.rmdir(dir_name)
 
-def recompile(dir_name='templates'):
-    for i in os.listdir(dir_name):
-
-        filename = str(i)
-        if '.py' in filename:
-            logger.info('Removed ' + filename)
-            os.remove('{}/{}'.format(dir_name,i))
-
-def rmtemplates():
+def rm_templates():
     rmdir('templates')
 
 if __name__ == '__main__':

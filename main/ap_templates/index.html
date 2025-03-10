@@ -1,0 +1,18 @@
+{{render_template('ap_templates/base_header.html', args = args)}}
+<!-- home.html -->
+{{render_template('ap_templates/actions.html', args = args)}}
+<div class="column middle-right content">
+    <table style="overflow-x:auto;">
+    <tr>
+        <td>Application</td>
+        <td>{{ args['app_name'] }}</td>
+    </tr><tr>
+        <td>Wi-Fi</td>
+        <td>{{ args['wifi_sta'] }}</td>
+    </tr><tr>
+        <td>Address</td>
+        <td>{{ args['ifconfig'][0] }}</td>
+    </tr>
+    </table>
+</div>
+{{render_template('ap_templates/base_footer.html')}}

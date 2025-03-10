@@ -1,0 +1,20 @@
+{% args args %}
+{% include 'base_header.html' %}
+<!-- home.html -->
+{% include 'actions.html' %}
+<div class="column middle-right content">
+    <table style="overflow-x:auto;">
+    <tr>
+        <td>Application</td>
+        <td>{{ args['app_name'] }}</td>
+    </tr><tr>
+        <td>Wi-Fi</td>
+        <td>{{ args['wifi_sta'] }}</td>
+    </tr><tr>
+        <td>Address</td>
+        <td>{{ args['ifconfig'][0] }}</td>
+    </tr>
+    </table>
+</div>
+
+{% include 'base_footer.html' %}
