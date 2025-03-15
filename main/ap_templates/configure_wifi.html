@@ -1,0 +1,30 @@
+{{render_template('ap_templates/base_header.html', args = args)}}
+<!-- home.html -->
+{{render_template('ap_templates/actions.html', args = args)}}
+<div class="column middle-right content">
+    <table style="overflow-x:auto;">
+        <tr>
+        <td>Application</td>
+        <td>{{ args['app_name'] }}</td>
+        </tr>
+    <tr style="height:15px"></tr>
+<form action="/add_ssid" method="post">
+    <tr>
+        <td>Network</td>
+        <td colspan="1"><input type="text" placeholder="<SSID>" name="ssid"/></td>
+        <td align="right"><input type="password" placeholder="<password>" name="password"/></td>
+        <td align="right"><input type="submit" name="action" value="Add" /></td>
+    </tr>
+</form>
+        {{"".join(["""<tr>
+<form action="/add_ssid" method="post">
+    <input type="hidden" name="{1}" value="{1}">
+        <td>{0}</td>
+        <td>{1}</td>
+        <td align="right">{2}dB <input type="password" placeholder="<password>" name="password"/></td>
+        <td align="right"><input type="submit" name="action" value="Add" /></td>
+ </form>
+        </tr>""".format(["Visible", ""][i!=0], wap[0], wap[1]) for i, wap in enumerate(args['waps'])]) }}
+    </table>
+</div>
+{{render_template('ap_templates/base_footer.html')}}

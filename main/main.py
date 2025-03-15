@@ -97,7 +97,7 @@ class WiFiManager():
             print('.', end='')
         print()
 
-    async def scan_for_waps(self):
+    def scan_for_waps(self):
         logger.debug('Scanning for Wi-Fi networks')
         networks = self.sta.scan()
         return networks
@@ -106,8 +106,8 @@ class WiFiManager():
     def get_host(self):
         return self.sta.ifconfig()[0]
 
-    async def scan_for_waps_sorted(self):
-        visible_ssids = await self.scan_for_waps()
+    def scan_for_waps_sorted(self):
+        visible_ssids = self.scan_for_waps()
         visible_ssids.sort(reverse=True, key=lambda x: x[3])
         wap_list = []
         ssid_list = []
@@ -210,20 +210,20 @@ def get_args(page, form=None):
 @server.route("/", methods=["GET"])
 def home(request):
     args = get_args(page='Home')
-    return render_template(f"{AP_TEMPLATE_PATH}/index.html", args = args)
+    return  render_template(f"{AP_TEMPLATE_PATH}/index.html", args = args)
 
 # catchall example
 @server.catchall()
 def catchall(request):
   return "Not found", 404
 
-# @server.catchall()
-# def my_catchall(request):
-#     print('my_catchall')
-#     logger.debug('my_catchall')
-#     return "No matching route", 404
-#
-#
+
+@server.route('/configure_wifi', methods=['GET', 'POST'])
+def configure_wifi(req):
+    args = get_args(page='Configure Wi-Fi')
+    args['waps'] = wifi_manager.scan_for_waps_sorted()
+    return render_template(f"{AP_TEMPLATE_PATH}/configure_wifi.html", args = args)
+
 # @server.route('/add_ssid', methods=['GET', 'POST'])
 # async def add_ssid(req):
 #     logger.debug('add_ssid')
@@ -235,12 +235,6 @@ def catchall(request):
 #         new_password = form['password']
 #         wifi_manager.insert_ssid(new_ssid, new_password)
 #     args = get_args(page='Add SSID', form=form)
-#     args['waps'] = await wifi_manager.scan_for_waps_sorted()
-#     return Template('configure_wifi.html').render(args)
-#
-# @server.route('/configure_wifi', methods=['GET', 'POST'])
-# async def configure_wifi(req):
-#     args = get_args(page='Configure Wi-Fi')
 #     args['waps'] = await wifi_manager.scan_for_waps_sorted()
 #     return Template('configure_wifi.html').render(args)
 #
