@@ -215,7 +215,9 @@ def home(request):
 # catchall example
 @server.catchall()
 def catchall(request):
-  return "Not found", 404
+    args = get_args(page='Not found error: 404')
+    args['url'] = request.uri
+    return render_template(f"{AP_TEMPLATE_PATH}/unexpected.html", args = args), 404
 
 
 @server.route('/configure_wifi', methods=['GET', 'POST'])
@@ -224,62 +226,62 @@ def configure_wifi(req):
     args['waps'] = wifi_manager.scan_for_waps_sorted()
     return render_template(f"{AP_TEMPLATE_PATH}/configure_wifi.html", args = args)
 
-# @server.route('/add_ssid', methods=['GET', 'POST'])
-# async def add_ssid(req):
-#     logger.debug('add_ssid')
-#     form = req.form
-#     action = form['action']
-#     if 'Add' == action:
-#         new_ssid = form['ssid']
-#         logger.debug('add_ssid ' + new_ssid)
-#         new_password = form['password']
-#         wifi_manager.insert_ssid(new_ssid, new_password)
-#     args = get_args(page='Add SSID', form=form)
-#     args['waps'] = await wifi_manager.scan_for_waps_sorted()
-#     return Template('configure_wifi.html').render(args)
-#
-# @server.route('/update_ssid', methods=['GET', 'POST'])
-# async def update_ssid(req):
-#     logger.debug('remove_ssid ')
-#     form = req.form
-#     ssid_index = form['ssid_index']
-#     try:
-#         index = int(ssid_index)
-#         action = form['action']
-#         if 'Remove' == action:
-#             logger.debug('update_ssid removing ssid ' + str(index) )
-#             wifi_manager.ssids.pop(index)
-#         if 'v' == action:
-#             logger.debug('update_ssid ssid down ' + str(index))
-#             wifi_manager.move_ssid_to(index, index+1)
-#         if '^' == action:
-#             logger.debug('update_ssid ssid up ' + str(index))
-#             wifi_manager.move_ssid_to(index, index-1)
-#
-#     except ValueError:
-#         logger.error('remove ssid invalid curr_index' + ssid_index)
-#     except IndexError:
-#         logger.error('remove ssid curr_index out of range' + ssid_index)
-#     args = get_args(page='Remove SSID', form=form)
-#     args['waps'] = await wifi_manager.scan_for_waps_sorted()
-#     return Template('configure_wifi.html').render(args)
-#
-#
-# @server.route('/update_config', methods=['GET', 'POST'])
-# async def update_config(req):
-#     logger.debug('update_config ')
-#     form = req.form
-#     action = form['action']
-#     if 'Reload' == action:
-#         logger.debug('update_config Reload')
-#         wifi_manager.load()
-#     if 'Save' == action:
-#         logger.debug('update_config Save')
-#         wifi_manager.save()
-#     args = get_args(page='Configure Wi-Fi')
-#     args['waps'] = await wifi_manager.scan_for_waps_sorted()
-#     return Template('configure_wifi.html').render(args)
-#
+@server.route('/add_ssid', methods=['GET', 'POST'])
+def add_ssid(req):
+    logger.debug('add_ssid')
+    form = req.form
+    action = form['action']
+    if 'Add' == action:
+        new_ssid = form['ssid']
+        logger.debug('add_ssid ' + new_ssid)
+        new_password = form['password']
+        wifi_manager.insert_ssid(new_ssid, new_password)
+    args = get_args(page='Add SSID', form=form)
+    args['waps'] = wifi_manager.scan_for_waps_sorted()
+    return render_template(f"{AP_TEMPLATE_PATH}/configure_wifi.html", args = args)
+
+@server.route('/update_ssid', methods=['GET', 'POST'])
+def update_ssid(req):
+    logger.debug('remove_ssid ')
+    form = req.form
+    ssid_index = form['ssid_index']
+    try:
+        index = int(ssid_index)
+        action = form['action']
+        if 'Remove' == action:
+            logger.debug('update_ssid removing ssid ' + str(index) )
+            wifi_manager.ssids.pop(index)
+        if 'v' == action:
+            logger.debug('update_ssid ssid down ' + str(index))
+            wifi_manager.move_ssid_to(index, index+1)
+        if '^' == action:
+            logger.debug('update_ssid ssid up ' + str(index))
+            wifi_manager.move_ssid_to(index, index-1)
+
+    except ValueError:
+        logger.error('remove ssid invalid curr_index' + ssid_index)
+    except IndexError:
+        logger.error('remove ssid curr_index out of range' + ssid_index)
+    args = get_args(page='Remove SSID', form=form)
+    args['waps'] = wifi_manager.scan_for_waps_sorted()
+    return render_template(f"{AP_TEMPLATE_PATH}/configure_wifi.html", args = args)
+
+
+@server.route('/update_config', methods=['GET', 'POST'])
+def update_config(req):
+    logger.debug('update_config ')
+    form = req.form
+    action = form['action']
+    if 'Reload' == action:
+        logger.debug('update_config Reload')
+        wifi_manager.load()
+    if 'Save' == action:
+        logger.debug('update_config Save')
+        wifi_manager.save()
+    args = get_args(page='Configure Wi-Fi')
+    args['waps'] = wifi_manager.scan_for_waps_sorted()
+    return render_template(f"{AP_TEMPLATE_PATH}/configure_wifi.html", args = args)
+
 # @server.route('/page2')
 # async def page2(req):
 #     args = get_args(page='Page 2')
