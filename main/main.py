@@ -21,7 +21,7 @@ WIFI_MAX_ATTEMPTS = 3
 
 
 class WiFiManager():
-    def __init__(self, wlan_filename='WIFI_CONFIG.json'):
+    def __init__(self, wlan_filename='wifi.json'):
         self.wlan_filename = wlan_filename
         self.wlan_attributes = None
         self.ssids = None
@@ -37,12 +37,14 @@ class WiFiManager():
             network.hostname(str(self.wlan_attributes['HOSTNAME']))
 
     def load(self):
-        logger.debug('load')
+        logger.debug('loading ' + self.wlan_filename)
         if self.wlan_filename in os.listdir():
             with open(self.wlan_filename) as f:
                 self.wlan_attributes = json.load(f)
             f.close()
+            logger.debug('loaded ' + self.wlan_filename)
         else:
+            logger.debug('setting default wlan attributes')
             self.wlan_attributes = {
                 'WIFI': [],
                 "HOSTNAME" : "pi_pico_w",
