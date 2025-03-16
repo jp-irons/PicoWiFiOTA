@@ -94,7 +94,7 @@ class WiFiManager():
     async def connect_to(self, ssid, password):
         logger.debug('Trying to connect to %s...' % ssid)
         self.sta.connect(ssid, password)
-        for retry in range(50):
+        for retry in range(100):
             connected = self.sta.isconnected()
             if connected:
                 print()
