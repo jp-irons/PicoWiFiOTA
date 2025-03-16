@@ -6,7 +6,7 @@ import uasyncio as asyncio
 from phew import server
 from phew.template import render_template
 import wifimanager
-from wifimanager import get_args
+
 
 # logging.basicConfig(level=logging.DEBUG)
 # logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ def images(request, file_name):
 # catchall example
 @server.catchall()
 def catchall(request):
-    args = get_args(page='Not found error: 404')
+    args = wifimanager.get_args(page='Not found error: 404')
     args['url'] = request.uri
     return render_template(f"{CONTENT_PATH}/unexpected.html", args=args), 404
 
@@ -53,7 +53,7 @@ def catchall(request):
 # url parameter and template render
 @server.route("/", methods=["GET"])
 def home(request):
-    args = get_args(page='Home')
+    args = wifimanager.get_args(page='Home')
     return render_template(f"{CONTENT_PATH}/home.html", args=args)
 
 

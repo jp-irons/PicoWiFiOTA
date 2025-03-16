@@ -10,7 +10,7 @@ from phew.template import render_template
 WIFI_TEMPLATE_PATH = "content/wi-fi"
 WIFI_FILE = "config/wifi.json"
 WIFI_MAX_ATTEMPTS = 3
-WIFI_MAX_SSIDS = 3
+WIFI_MAX_SSIDS = 5
 
 class WiFiManager:
     def __init__(self, wlan_filename=WIFI_FILE):
