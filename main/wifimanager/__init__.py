@@ -3,13 +3,14 @@ import network
 import uasyncio as asyncio
 
 import logging
-from main import get_args
+from main import APP_NAME
 from phew import server
 from phew.template import render_template
 
 WIFI_TEMPLATE_PATH = "content/wi-fi"
 WIFI_FILE = "config/wifi.json"
 WIFI_MAX_ATTEMPTS = 3
+WIFI_MAX_SSIDS = 3
 
 class WiFiManager:
     def __init__(self, wlan_filename=WIFI_FILE):
@@ -116,6 +117,10 @@ class WiFiManager:
     def insert_ssid(self, new_ssid, new_password):
         self.ssids.insert(0, ['0', new_ssid, new_password])
         self.update_ssid_order()
+        if len(self.ssids) > WIFI_MAX_SSIDS:
+            logging.debug('too many ssids - pop the last')
+            wifi_manager.ssids.pop(WIFI_MAX_SSIDS)
+
 
     def update_ssid_order(self):
         for i, ssid in enumerate(self.ssids):
@@ -252,3 +257,28 @@ def log_serverUrl():
             logging.info('https://' + wifi_manager.get_host())
         else:
             logging.info('http://' + wifi_manager.get_host() + ':' + str(port))
+
+
+def get_args(page, form=None):
+    wifi_sta = 'Not connected'
+    wifi_sta_connected = wifi_manager.sta.isconnected()
+    if wifi_sta_connected:
+        wifi_sta = wifi_manager.sta.config('ssid')
+    wifi_ap = wifi_manager.wlan_attributes["HOSTNAME"]
+    wifi_ap_password = wifi_manager.wlan_attributes["PASSWORD"]
+    wifi_ap_connected = wifi_manager.ap.isconnected()
+    ifconfig = wifi_manager.sta.ifconfig()
+    ssids = wifi_manager.ssids
+    args = {'app_name': APP_NAME,
+            'page': page,
+            'wifi_sta': wifi_sta,
+            'wifi_sta_connected': wifi_sta_connected,
+            'wifi_ap': wifi_ap,
+            'wifi_ap_password': wifi_ap_password,
+            'wifi_ap_connected': wifi_ap_connected,
+            'wifi_ap_required': wifi_manager.wlan_attributes["RUNWAP"],
+            'wifi_ap_choices': wifi_manager.wlan_attributes["RUNWAP_CHOICES"],
+            'ifconfig': ifconfig,
+            'ssids': ssids,
+            'form': form}
+    return args

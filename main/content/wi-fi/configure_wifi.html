@@ -14,11 +14,15 @@
         <td align="right"><input type="password" placeholder="<new password>" name="password"/></td>
         <td align="right">
             <input type="submit" name="action" value="Update">
-            <input type="submit" name="action" value="^">
-            <input type="submit" name="action" value="v">
+            <input type="submit" name="action" value="^" {3}>
             <input type="submit" name="action" value="Remove"></td>
 </form>
-        </tr>""".format(["SSIDs", ""][i!=0], i, credentials[1]) for i, credentials in enumerate(args['ssids'])]) }}
+        </tr>""".format(
+        ["SSIDs", ""][i!=0]
+        , i
+        , credentials[1]
+        , ["", "disabled"][i==0]
+        ) for i, credentials in enumerate(args['ssids'])]) }}
 <form action="/wi-fi/update_config" method="post">
     <tr>
         <td colspan="3"></td>

@@ -6,6 +6,7 @@ import uasyncio as asyncio
 from phew import server
 from phew.template import render_template
 import wifimanager
+from wifimanager import get_args
 
 # logging.basicConfig(level=logging.DEBUG)
 # logger = logging.getLogger(__name__)
@@ -54,34 +55,6 @@ def catchall(request):
 def home(request):
     args = get_args(page='Home')
     return render_template(f"{CONTENT_PATH}/home.html", args=args)
-
-
-def get_args(page, form=None):
-    wifi_sta = 'Not connected'
-    wifi_sta_connected = wifimanager.wifi_manager.sta.isconnected()
-    if wifi_sta_connected:
-        wifi_sta = wifimanager.wifi_manager.sta.config('ssid')
-    wifi_ap = wifimanager.wifi_manager.wlan_attributes["HOSTNAME"]
-    wifi_ap_password = wifimanager.wifi_manager.wlan_attributes["PASSWORD"]
-    wifi_ap_connected = wifimanager.wifi_manager.ap.isconnected()
-    ifconfig = wifimanager.wifi_manager.sta.ifconfig()
-    ssids = wifimanager.wifi_manager.ssids
-    args = {'app_name': APP_NAME,
-            'page': page,
-            'wifi_sta': wifi_sta,
-            'wifi_sta_connected': wifi_sta_connected,
-            'wifi_ap': wifi_ap,
-            'wifi_ap_password': wifi_ap_password,
-            'wifi_ap_connected': wifi_ap_connected,
-            'wifi_ap_required': wifimanager.wifi_manager.wlan_attributes["RUNWAP"],
-            'wifi_ap_choices': wifimanager.wifi_manager.wlan_attributes["RUNWAP_CHOICES"],
-            'ifconfig': ifconfig,
-            'ssids': ssids,
-            'form': form}
-    return args
-
-
-# url parameter and template render
 
 
 # @server.route('/page2')
