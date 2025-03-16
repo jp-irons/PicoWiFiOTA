@@ -45,6 +45,7 @@ class WiFiManager():
             with open(self.wlan_filename) as f:
                 self.wlan_attributes = json.load(f)
             f.close()
+            logger.debug('opened ' + self.wlan_filename)
         except OSError:  # open failed
             logger.debug('open failed for ' + self.wlan_filename)
             # handle the file open case
