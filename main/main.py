@@ -14,14 +14,16 @@ logger = logging.getLogger(__name__)
 APP_NAME = "Pi Pico Embedded"
 AP_DOMAIN = "pipico.net"
 
-AP_TEMPLATE_PATH = "ap_templates"
-APP_TEMPLATE_PATH = "app_templates"
-WIFI_FILE = "wifi.json"
+CONTENT_PATH = "content"
+IMAGES_PATH = "content/images"
+WIFI_TEMPLATE_PATH = "content/wi-fi"
+APP_TEMPLATE_PATH = "content/app"
+WIFI_FILE = "config/wifi.json"
 WIFI_MAX_ATTEMPTS = 3
 
 
 class WiFiManager():
-    def __init__(self, wlan_filename='WIFI_CONFIG.json'):
+    def __init__(self, wlan_filename=WIFI_FILE):
         self.wlan_filename = wlan_filename
         self.wlan_attributes = None
         self.ssids = None
@@ -38,15 +40,18 @@ class WiFiManager():
 
     def load(self):
         logger.debug('load')
-        if self.wlan_filename in os.listdir():
+        try:
+            logger.debug('opening ' + self.wlan_filename)
             with open(self.wlan_filename) as f:
                 self.wlan_attributes = json.load(f)
             f.close()
-        else:
+        except OSError:  # open failed
+            logger.debug('open failed for ' + self.wlan_filename)
+            # handle the file open case
             self.wlan_attributes = {
                 'WIFI': [],
-                "HOSTNAME" : "pi_pico_w",
-                "PASSWORD" : "p1c0wifi",
+                "HOSTNAME": "pi_pico_w",
+                "PASSWORD": "p1c0wifi",
                 "RUNWAP": "always",
                 "RUNWAP_CHOICES": ["always", "as needed", "never"]
             }
@@ -102,7 +107,6 @@ class WiFiManager():
         networks = self.sta.scan()
         return networks
 
-
     def get_host(self):
         return self.sta.ifconfig()[0]
 
@@ -129,9 +133,9 @@ class WiFiManager():
 
     def move_ssid_to(self, index, new_index):
         if (index < 0 or
-            new_index < 0 or
-            index > len(self.ssids) or
-            new_index > len(self.ssids)):
+                new_index < 0 or
+                index > len(self.ssids) or
+                new_index > len(self.ssids)):
             return
         this_ssid = self.ssids.pop(index)
         self.ssids.insert(new_index, this_ssid)
@@ -173,6 +177,7 @@ class WiFiManager():
 
 wifi_manager = WiFiManager()
 
+
 #app_name = "Pi Pico Embedded"
 
 def get_args(page, form=None):
@@ -206,27 +211,47 @@ def get_args(page, form=None):
 #
 #
 
-# url parameter and template render
-@server.route("/", methods=["GET"])
-def home(request):
-    args = get_args(page='Home')
-    return  render_template(f"{AP_TEMPLATE_PATH}/index.html", args = args)
-
 # catchall example
 @server.catchall()
 def catchall(request):
     args = get_args(page='Not found error: 404')
     args['url'] = request.uri
-    return render_template(f"{AP_TEMPLATE_PATH}/unexpected.html", args = args), 404
+    return render_template(f"{CONTENT_PATH}/unexpected.html", args=args), 404
 
 
-@server.route('/configure_wifi', methods=['GET', 'POST'])
+# url parameter and template render
+@server.route("/", methods=["GET"])
+def home(request):
+    args = get_args(page='Home')
+    return render_template(f"{CONTENT_PATH}/home.html", args=args)
+
+
+# return file in IMAGES_PATH
+@server.route("/images/<file_name>", methods=['GET', 'POST'])
+def images(request, file_name):
+    file_path = f"{IMAGES_PATH}/{file_name}"
+    logger.debug('getting image ' + file_path)
+    page = open(file_path, "rb")
+    content = page.read()
+    page.close()
+    return content, 200
+
+
+# url parameter and template render
+@server.route("/wi-fi", methods=["GET"])
+def home(request):
+    args = get_args(page='Wi-Fi Home')
+    return render_template(f"{WIFI_TEMPLATE_PATH}/home.html", args=args)
+
+
+@server.route('/wi-fi/configure_wifi', methods=['GET', 'POST'])
 def configure_wifi(req):
     args = get_args(page='Configure Wi-Fi')
     args['waps'] = wifi_manager.scan_for_waps_sorted()
-    return render_template(f"{AP_TEMPLATE_PATH}/configure_wifi.html", args = args)
+    return render_template(f"{WIFI_TEMPLATE_PATH}/configure_wifi.html", args=args)
 
-@server.route('/add_ssid', methods=['GET', 'POST'])
+
+@server.route('/wi-fi/add_ssid', methods=['GET', 'POST'])
 def add_ssid(req):
     logger.debug('add_ssid')
     form = req.form
@@ -238,9 +263,10 @@ def add_ssid(req):
         wifi_manager.insert_ssid(new_ssid, new_password)
     args = get_args(page='Add SSID', form=form)
     args['waps'] = wifi_manager.scan_for_waps_sorted()
-    return render_template(f"{AP_TEMPLATE_PATH}/configure_wifi.html", args = args)
+    return render_template(f"{WIFI_TEMPLATE_PATH}/configure_wifi.html", args=args)
 
-@server.route('/update_ssid', methods=['GET', 'POST'])
+
+@server.route('/wi-fi/update_ssid', methods=['GET', 'POST'])
 def update_ssid(req):
     logger.debug('remove_ssid ')
     form = req.form
@@ -249,14 +275,14 @@ def update_ssid(req):
         index = int(ssid_index)
         action = form['action']
         if 'Remove' == action:
-            logger.debug('update_ssid removing ssid ' + str(index) )
+            logger.debug('update_ssid removing ssid ' + str(index))
             wifi_manager.ssids.pop(index)
         if 'v' == action:
             logger.debug('update_ssid ssid down ' + str(index))
-            wifi_manager.move_ssid_to(index, index+1)
+            wifi_manager.move_ssid_to(index, index + 1)
         if '^' == action:
             logger.debug('update_ssid ssid up ' + str(index))
-            wifi_manager.move_ssid_to(index, index-1)
+            wifi_manager.move_ssid_to(index, index - 1)
 
     except ValueError:
         logger.error('remove ssid invalid curr_index' + ssid_index)
@@ -264,10 +290,10 @@ def update_ssid(req):
         logger.error('remove ssid curr_index out of range' + ssid_index)
     args = get_args(page='Remove SSID', form=form)
     args['waps'] = wifi_manager.scan_for_waps_sorted()
-    return render_template(f"{AP_TEMPLATE_PATH}/configure_wifi.html", args = args)
+    return render_template(f"{WIFI_TEMPLATE_PATH}/configure_wifi.html", args=args)
 
 
-@server.route('/update_config', methods=['GET', 'POST'])
+@server.route('/wi-fi/update_config', methods=['GET', 'POST'])
 def update_config(req):
     logger.debug('update_config ')
     form = req.form
@@ -280,7 +306,8 @@ def update_config(req):
         wifi_manager.save()
     args = get_args(page='Configure Wi-Fi')
     args['waps'] = wifi_manager.scan_for_waps_sorted()
-    return render_template(f"{AP_TEMPLATE_PATH}/configure_wifi.html", args = args)
+    return render_template(f"{WIFI_TEMPLATE_PATH}/configure_wifi.html", args=args)
+
 
 # @server.route('/page2')
 # async def page2(req):
@@ -292,19 +319,20 @@ def log_serverUrl():
     port = 80
     if ssl is None:
         if port == 80:
-            logger.info('http://'+wifi_manager.get_host())
+            logger.info('http://' + wifi_manager.get_host())
         else:
             logger.info('http://' + wifi_manager.get_host() + ':' + str(port))
     else:
         if port == 443:
-            logger.info('https://'+wifi_manager.get_host())
+            logger.info('https://' + wifi_manager.get_host())
         else:
             logger.info('http://' + wifi_manager.get_host() + ':' + str(port))
 
 
-async def start_server(host = "0.0.0.0", port = 80):
+async def start_server(host="0.0.0.0", port=80):
     logger.debug('start server')
     server.run(host, port)
+
 
 async def run_app():
     logger.debug('starting app')
@@ -316,14 +344,17 @@ async def run_app():
     )
     logger.debug('app finished')
 
+
 def disconnect_wifi():
     wifi_manager.sta.active(True)
     if not wifi_manager.sta.isconnected():
         return None
     wifi_manager.sta.disconnect()
 
+
 def execute():
     asyncio.run(run_app())
+
 
 def debug():
     logger.setLevel(logging.DEBUG)
@@ -334,13 +365,16 @@ async def main():
     # connect_wifi()
     pass
 
+
 def rmdir(dir_name):
     for i in os.listdir(dir_name):
         os.remove('{}/{}'.format(dir_name, i))
     os.rmdir(dir_name)
 
+
 def rm_templates():
-    rmdir('templates')
+    rmdir('content')
+
 
 if __name__ == '__main__':
     main()

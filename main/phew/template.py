@@ -6,7 +6,7 @@ async def render_template(template, **kwargs):
 
   with open(template, "rb") as f:
     # read the whole template file, we could work on single lines but
-    # the performance is much worse - so long as our templates are
+    # the performance is much worse - so long as our content are
     # just a handful of kB it's ok to do this
     data = f.read()
     token_caret = 0

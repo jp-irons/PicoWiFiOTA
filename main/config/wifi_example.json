@@ -1,0 +1,11 @@
+{
+  "WIFI" :
+  [
+      ["0", "copy this file to wifi.json - SSID", "password"],
+      ["2", "ssid2", "password"]
+  ],
+  "HOSTNAME" : "pi_pico_w",
+  "PASSWORD" : "p1c0wifi",
+  "RUNWAP" : "as needed",
+  "RUNWAP_CHOICES" : ["always", "as needed", "never"],
+}

@@ -1,7 +1,5 @@
-{% args args %}
-{% include 'base_header.html' %}
-<!-- home.html -->
-{% include 'actions.html' %}
+{{render_template('content/base_header.html', args = args)}}
+{{render_template('content/actions.html', args = args)}}
 <div class="column middle-right content">
     <table style="overflow-x:auto;">
     <tr>
@@ -16,5 +14,4 @@
     </tr>
     </table>
 </div>
-
-{% include 'base_footer.html' %}
+{{render_template('content/base_footer.html')}}

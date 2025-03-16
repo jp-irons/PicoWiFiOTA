@@ -1,4 +1,4 @@
 # copy to WIFI_CONFIG.py
-SSID = "my wifi hotspot name"
-PASSWORD = "wifi password"
+SSID = "my wi-fi hotspot name"
+PASSWORD = "wi-fi password"
 

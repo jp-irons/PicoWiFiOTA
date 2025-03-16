@@ -11,8 +11,8 @@ To use this code:
 1. Create a file named `WIFI_CONFIG.py` on your MicroPython device, which contains two variables: `SSID` and `PASSWORD`:
 
     ```python
-    SSID = "my wifi hotspot name"
-    PASSWORD = "wifi password"
+    SSID = "my wi-fi hotspot name"
+    PASSWORD = "wi-fi password"
     ```
 
 1. Add this to your main program code:
