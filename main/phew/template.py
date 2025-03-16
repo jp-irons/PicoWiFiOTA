@@ -1,4 +1,5 @@
-from . import logging
+import logging
+
 
 async def render_template(template, **kwargs):
   import time

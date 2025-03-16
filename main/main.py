@@ -8,9 +8,9 @@ import uasyncio as asyncio
 from phew import server
 from phew.template import render_template
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
+# logging.basicConfig(level=logging.DEBUG)
+# logger = logging.getLogger(__name__)
+#
 APP_NAME = "Pi Pico Embedded"
 AP_DOMAIN = "pipico.net"
 
@@ -21,6 +21,9 @@ APP_TEMPLATE_PATH = "content/app"
 WIFI_FILE = "config/wifi.json"
 WIFI_MAX_ATTEMPTS = 3
 
+LOG_LEVEL = logging.LOG_ALL
+
+logging._logging_types = LOG_LEVEL
 
 class WiFiManager():
     def __init__(self, wlan_filename=WIFI_FILE):
@@ -39,15 +42,15 @@ class WiFiManager():
             network.hostname(str(self.wlan_attributes['HOSTNAME']))
 
     def load(self):
-        logger.debug('load')
+        logging.debug('load')
         try:
-            logger.debug('opening ' + self.wlan_filename)
+            logging.debug('opening ' + self.wlan_filename)
             with open(self.wlan_filename) as f:
                 self.wlan_attributes = json.load(f)
             f.close()
-            logger.debug('opened ' + self.wlan_filename)
+            logging.debug('opened ' + self.wlan_filename)
         except OSError:  # open failed
-            logger.debug('open failed for ' + self.wlan_filename)
+            logging.debug('open failed for ' + self.wlan_filename)
             # handle the file open case
             self.wlan_attributes = {
                 'WIFI': [],
@@ -63,18 +66,18 @@ class WiFiManager():
         self.ssids.sort(key=lambda x: x[0])
 
     def save(self):
-        logger.debug('save')
+        logging.debug('save')
         self.update_ssid_order()
         self.wlan_attributes['WIFI'] = self.ssids
         with open(self.wlan_filename, 'w') as f:
             json.dump(self.wlan_attributes, f)
 
     async def setup_connection(self):
-        logger.debug('connect()')
+        logging.debug('connect()')
         self.sta.active(True)
         connected = False
         if self.sta.isconnected():
-            logger.info('Connected: %s', self.sta.ifconfig())
+            logging.info('Connected: %s', self.sta.ifconfig())
             return True
         self.sta_connecting = True
         for credentials in self.ssids:
@@ -82,17 +85,17 @@ class WiFiManager():
             password = credentials[2]
             connected = await self.connect_to(ssid, password)
             if connected:
-                logger.info('Connected to %s %s', ssid, self.sta.ifconfig())
+                logging.info('Connected to %s %s', ssid, self.sta.ifconfig())
                 log_serverUrl()
                 return connected
             else:
-                logger.info('Failed to connect to ' + ssid)
-        logger.debug('No Wi-FI connection made')
+                logging.info('Failed to connect to ' + ssid)
+        logging.debug('No Wi-FI connection made')
         self.sta_connecting = False
         return connected
 
     async def connect_to(self, ssid, password):
-        logger.debug('Trying to connect to %s...' % ssid)
+        logging.debug('Trying to connect to %s...' % ssid)
         self.sta.connect(ssid, password)
         for retry in range(100):
             connected = self.sta.isconnected()
@@ -104,7 +107,7 @@ class WiFiManager():
         print()
 
     def scan_for_waps(self):
-        logger.debug('Scanning for Wi-Fi networks')
+        logging.debug('Scanning for Wi-Fi networks')
         networks = self.sta.scan()
         return networks
 
@@ -143,7 +146,7 @@ class WiFiManager():
         self.update_ssid_order()
 
     async def run_wap_loop(self):
-        logger.debug('run_wap_loop')
+        logging.debug('run_wap_loop')
         while True:
             if not self.ap_required():
                 self.ap.active(False)
@@ -163,7 +166,7 @@ class WiFiManager():
             await asyncio.sleep_ms(10)
             print('.', end='')
         print()
-        logger.info('AP active - SSID:' + ssid + ' password:' + password + ' IP:' + str(self.ap.ifconfig()[0]))
+        logging.info('AP active - SSID:' + ssid + ' password:' + password + ' IP:' + str(self.ap.ifconfig()[0]))
 
     def ap_required(self):
         # if ap required but not operational start ap
@@ -231,7 +234,7 @@ def home(request):
 @server.route("/images/<file_name>", methods=['GET', 'POST'])
 def images(request, file_name):
     file_path = f"{IMAGES_PATH}/{file_name}"
-    logger.debug('getting image ' + file_path)
+    logging.debug('getting image ' + file_path)
     page = open(file_path, "rb")
     content = page.read()
     page.close()
@@ -254,12 +257,12 @@ def configure_wifi(req):
 
 @server.route('/wi-fi/add_ssid', methods=['GET', 'POST'])
 def add_ssid(req):
-    logger.debug('add_ssid')
+    logging.debug('add_ssid')
     form = req.form
     action = form['action']
     if 'Add' == action:
         new_ssid = form['ssid']
-        logger.debug('add_ssid ' + new_ssid)
+        logging.debug('add_ssid ' + new_ssid)
         new_password = form['password']
         wifi_manager.insert_ssid(new_ssid, new_password)
     args = get_args(page='Add SSID', form=form)
@@ -269,26 +272,26 @@ def add_ssid(req):
 
 @server.route('/wi-fi/update_ssid', methods=['GET', 'POST'])
 def update_ssid(req):
-    logger.debug('remove_ssid ')
+    logging.debug('remove_ssid ')
     form = req.form
     ssid_index = form['ssid_index']
     try:
         index = int(ssid_index)
         action = form['action']
         if 'Remove' == action:
-            logger.debug('update_ssid removing ssid ' + str(index))
+            logging.debug('update_ssid removing ssid ' + str(index))
             wifi_manager.ssids.pop(index)
         if 'v' == action:
-            logger.debug('update_ssid ssid down ' + str(index))
+            logging.debug('update_ssid ssid down ' + str(index))
             wifi_manager.move_ssid_to(index, index + 1)
         if '^' == action:
-            logger.debug('update_ssid ssid up ' + str(index))
+            logging.debug('update_ssid ssid up ' + str(index))
             wifi_manager.move_ssid_to(index, index - 1)
 
     except ValueError:
-        logger.error('remove ssid invalid curr_index' + ssid_index)
+        logging.error('remove ssid invalid curr_index' + ssid_index)
     except IndexError:
-        logger.error('remove ssid curr_index out of range' + ssid_index)
+        logging.error('remove ssid curr_index out of range' + ssid_index)
     args = get_args(page='Remove SSID', form=form)
     args['waps'] = wifi_manager.scan_for_waps_sorted()
     return render_template(f"{WIFI_TEMPLATE_PATH}/configure_wifi.html", args=args)
@@ -296,14 +299,14 @@ def update_ssid(req):
 
 @server.route('/wi-fi/update_config', methods=['GET', 'POST'])
 def update_config(req):
-    logger.debug('update_config ')
+    logging.debug('update_config ')
     form = req.form
     action = form['action']
     if 'Reload' == action:
-        logger.debug('update_config Reload')
+        logging.debug('update_config Reload')
         wifi_manager.load()
     if 'Save' == action:
-        logger.debug('update_config Save')
+        logging.debug('update_config Save')
         wifi_manager.save()
     args = get_args(page='Configure Wi-Fi')
     args['waps'] = wifi_manager.scan_for_waps_sorted()
@@ -320,30 +323,30 @@ def log_serverUrl():
     port = 80
     if ssl is None:
         if port == 80:
-            logger.info('http://' + wifi_manager.get_host())
+            logging.info('http://' + wifi_manager.get_host())
         else:
-            logger.info('http://' + wifi_manager.get_host() + ':' + str(port))
+            logging.info('http://' + wifi_manager.get_host() + ':' + str(port))
     else:
         if port == 443:
-            logger.info('https://' + wifi_manager.get_host())
+            logging.info('https://' + wifi_manager.get_host())
         else:
-            logger.info('http://' + wifi_manager.get_host() + ':' + str(port))
+            logging.info('http://' + wifi_manager.get_host() + ':' + str(port))
 
 
 async def start_server(host="0.0.0.0", port=80):
-    logger.debug('start server')
+    logging.debug('start server')
     server.run(host, port)
 
 
 async def run_app():
-    logger.debug('starting app')
+    logging.debug('starting app')
     port = 80
     await asyncio.gather(
         wifi_manager.setup_connection(),
         wifi_manager.run_wap_loop(),
         start_server(port=port)
     )
-    logger.debug('app finished')
+    logging.debug('app finished')
 
 
 def disconnect_wifi():
@@ -358,7 +361,7 @@ def execute():
 
 
 def debug():
-    logger.setLevel(logging.DEBUG)
+    logging._logging_types = logging.LOG_ALL
     asyncio.run(run_app())
 
 

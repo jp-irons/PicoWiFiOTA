@@ -1,5 +1,6 @@
 import uasyncio, usocket
-from . import logging
+import logging
+
 
 async def _handler(socket, ip_address):
   while True:

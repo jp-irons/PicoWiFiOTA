@@ -3,11 +3,12 @@ __version__ = "0.0.2"
 # highly recommended to set a lowish garbage collection threshold
 # to minimise memory fragmentation as we sometimes want to
 # allocate relatively large blocks of ram.
-import gc, os, machine
+import gc, os
+
 gc.threshold(50000)
 
 # phew! the Pico (or Python) HTTP Endpoint Wrangler
-from . import logging
+import logging
 
 # determine if remotely mounted or not, changes some behaviours like
 # logging truncation
@@ -25,7 +26,7 @@ def get_ip_address():
     return None
 
 def is_connected_to_wifi():
-  import network, time
+  import network
   wlan = network.WLAN(network.STA_IF)
   return wlan.isconnected()
 
