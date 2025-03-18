@@ -203,12 +203,13 @@ def add_ssid(req):
 
 @server.route('/wi-fi/update_ssid', methods=['GET', 'POST'])
 def update_ssid(req):
-    logging.debug('remove_ssid ')
+    logging.debug('update_ssid')
     form = req.form
     ssid_index = form['ssid_index']
     try:
         index = int(ssid_index)
         action = form['action']
+        logging.debug('' + action + ' ' + str(index))
         if 'Remove' == action:
             logging.debug('update_ssid removing ssid ' + str(index))
             wifi_manager.ssids.pop(index)
@@ -218,11 +219,15 @@ def update_ssid(req):
         if '^' == action:
             logging.debug('update_ssid ssid up ' + str(index))
             wifi_manager.move_ssid_to(index, index - 1)
+        if 'Update' == action:
+            logging.debug('update_ssid password ' + str(index))
+            new_password = form['password']
+            wifi_manager.ssids[index][2] = new_password
 
     except ValueError:
-        logging.error('remove ssid invalid curr_index' + ssid_index)
+        logging.error('update ssid invalid value' + ssid_index)
     except IndexError:
-        logging.error('remove ssid curr_index out of range' + ssid_index)
+        logging.error('update ssid curr_index out of range' + ssid_index)
     args = get_args(page='Remove SSID', form=form)
     args['waps'] = wifi_manager.scan_for_waps_sorted()
     return render_template(f"{WIFI_TEMPLATE_PATH}/configure_wifi.html", args=args)
@@ -267,6 +272,8 @@ def get_args(page, form=None):
     wifi_ap = wifi_manager.wlan_attributes["HOSTNAME"]
     wifi_ap_password = wifi_manager.wlan_attributes["PASSWORD"]
     wifi_ap_connected = wifi_manager.ap.isconnected()
+    wifi_ap_up = wifi_manager.ap.active()
+
     ifconfig = wifi_manager.sta.ifconfig()
     ssids = wifi_manager.ssids
     args = {'app_name': APP_NAME,
@@ -274,6 +281,7 @@ def get_args(page, form=None):
             'wifi_sta': wifi_sta,
             'wifi_sta_connected': wifi_sta_connected,
             'wifi_ap': wifi_ap,
+            'wifi_ap_status' : ['down', 'up'][wifi_ap_up],
             'wifi_ap_password': wifi_ap_password,
             'wifi_ap_connected': wifi_ap_connected,
             'wifi_ap_required': wifi_manager.wlan_attributes["RUNWAP"],

@@ -15,7 +15,7 @@ APP_NAME = "Pi Pico Embedded"
 AP_DOMAIN = "pipico.net"
 
 CONTENT_PATH = "content"
-IMAGES_PATH = "content/images"
+IMAGES_PATH = "content/static"
 APP_TEMPLATE_PATH = "content/app"
 
 LOG_LEVEL = logging.LOG_ALL
@@ -25,7 +25,7 @@ logging._logging_types = LOG_LEVEL
 
 #app_name = "Pi Pico Embedded"
 # return file in IMAGES_PATH
-@server.route("/images/<file_name>", methods=['GET', 'POST'])
+@server.route("/static/<file_name>", methods=['GET', 'POST'])
 def images(request, file_name):
     file_path = f"{IMAGES_PATH}/{file_name}"
     logging.debug('getting image ' + file_path)

@@ -6,105 +6,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ args['app_name'] }} - {{ args['page'] }}</title>
-    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
- <style>
-* {
-  box-sizing: border-box;
-}
-
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
-tr {
-  height: 30px;
-}
-
-th {
-  font-weight: bold;
-}
-
-/* Style the header */
-.content {
-  background-color: #fff;
-  padding: 0px;
-  text-align: left;
-  font-size: 15px;
-}
-
-/* Style the header */
-.navbar {
-  background-color: #aaa;
-  padding: 10px;
-  text-align: left;
-  font-size: 15px;
-}
-
-
-/* Style the header */
-.header {
-  background-color: #88a;
-  padding: 20px;
-  text-align: center;
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.row {
-  height: 100%;
-  padding: 0px;
-}
-
-/* Create three unequal columns that floats next to each other */
-.column {
-  float: left;
-  padding: 10px;
-  height: 450px
-}
-
-/* Left and right column */
-.column.side {
-  width: 25%;
-  height: 100%;
-}
-
-/* Middle column */
-.column.middle {
-  width: 50%;
-}
-
-/* Middle column */
-.column.middle-right {
-  width: 75%;
-}
-
-/* Clear floats after the columns */
-.row:after {
-  content: "";
-  display: table;
-  clear: both;
-}
-
-/* Style the footer */
-.footer {
-  background-color: #f1f1f1;
-  padding: 10px;
-  text-align: center;
-}
-
-/* Responsive layout - makes the three columns stack on top of each other instead of next to each other */
-@media (max-width: 600px) {
-  .column.side, .column.middle, .column.middle-right {
-    width: 100%;
-  }
-}
-</style>
-
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+{{render_template('content/static/styles.css', args = args)}}
+    </style>
 </head>
 <body>
 <div class="header">
