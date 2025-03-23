@@ -1,13 +1,13 @@
-{{render_template('content/wi-fi/base_header.html', args = args)}}
-{{render_template('content/wi-fi/actions.html', args = args)}}
-<div class="column middle-right content">
+{{render_template('content/settings/base_header.html', args = args)}}
+{{render_template('content/settings/actions.html', args = args)}}
+<div class="content">
     <table style="overflow-x:auto;">
         <tr>
         <td>Application</td>
         <td>{{ args['app_name'] }}</td>
         </tr>
         {{"".join(["""<tr>
-<form action="/wi-fi/update_ssid" method="post">
+<form action="/settings/wifi/update_ssid" method="post">
     <input type="hidden" name="ssid_index" value="{1}">
         <td>{0}</td>
         <td colspan="1">{2}</td>
@@ -23,14 +23,14 @@
         , credentials[1]
         , ["", "disabled"][i==0]
         ) for i, credentials in enumerate(args['ssids'])]) }}
-<form action="/wi-fi/update_config" method="post">
+<form action="/settings/wifi/update_config" method="post">
     <tr>
         <td colspan="3"></td>
         <td align="right"> <input type="submit" name="action" value="Reload"> <input type="submit" name="action" value="Save"></td>
     </tr>
 </form>
     <tr style="height:15px"></tr>
-<form action="/wi-fi/add_ssid" method="post">
+<form action="/settings/wifi/add_ssid" method="post">
     <tr>
         <td>Network</td>
         <td colspan="1"><input type="text" placeholder="<SSID>" name="ssid"/></td>
@@ -39,7 +39,7 @@
     </tr>
 </form>
         {{"".join(["""<tr>
-<form action="/wi-fi/add_ssid" method="post">
+<form action="/settings/wifi/add_ssid" method="post">
     <input type="hidden" name="ssid" value="{1}">
         <td>{0}</td>
         <td>{1}</td>
@@ -49,4 +49,4 @@
         </tr>""".format(["Visible", ""][i!=0], wap[0], wap[1]) for i, wap in enumerate(args['waps'])]) }}
     </table>
 </div>
-{{render_template('content/wi-fi/base_footer.html')}}
+{{render_template('content/settings/base_footer.html')}}

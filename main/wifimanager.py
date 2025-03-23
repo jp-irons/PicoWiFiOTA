@@ -7,7 +7,7 @@ from main import APP_NAME
 from phew import server
 from phew.template import render_template
 
-WIFI_TEMPLATE_PATH = "content/wi-fi"
+WIFI_TEMPLATE_PATH = "content/settings"
 WIFI_FILE = "config/wifi.json"
 WIFI_MAX_ATTEMPTS = 3
 WIFI_MAX_SSIDS = 5
@@ -173,21 +173,26 @@ class WiFiManager:
 wifi_manager = WiFiManager()
 
 
-@server.route("/wi-fi", methods=["GET"])
-def home(request):
+@server.route("/settings", methods=["GET"])
+@server.route("/settings/", methods=["GET"])
+@server.route("/settings/wifi", methods=["GET"])
+@server.route("/settings/wifi/", methods=["GET"])
+async def home(request):
+    logging.debug("/wifi/home")
     args = get_args(page='Wi-Fi Home')
-    return render_template(f"{WIFI_TEMPLATE_PATH}/home.html", args=args)
+    return await render_template(f"{WIFI_TEMPLATE_PATH}/home.html", args=args)
 
 
-@server.route('/wi-fi/configure_wifi', methods=['GET', 'POST'])
-def configure_wifi(req):
+@server.route('/settings/wifi/configure_wifi', methods=['GET', 'POST'])
+async def configure_wifi(req):
+    logging.debug("/wifi/configure")
     args = get_args(page='Configure Wi-Fi')
     args['waps'] = wifi_manager.scan_for_waps_sorted()
-    return render_template(f"{WIFI_TEMPLATE_PATH}/configure_wifi.html", args=args)
+    return await render_template(f"{WIFI_TEMPLATE_PATH}/configure_wifi.html", args=args)
 
 
-@server.route('/wi-fi/add_ssid', methods=['GET', 'POST'])
-def add_ssid(req):
+@server.route('/settings/wifi/add_ssid', methods=['GET', 'POST'])
+async def add_ssid(req):
     logging.debug('add_ssid')
     form = req.form
     action = form['action']
@@ -198,11 +203,11 @@ def add_ssid(req):
         wifi_manager.insert_ssid(new_ssid, new_password)
     args = get_args(page='Add SSID', form=form)
     args['waps'] = wifi_manager.scan_for_waps_sorted()
-    return render_template(f"{WIFI_TEMPLATE_PATH}/configure_wifi.html", args=args)
+    return await render_template(f"{WIFI_TEMPLATE_PATH}/configure_wifi.html", args=args)
 
 
-@server.route('/wi-fi/update_ssid', methods=['GET', 'POST'])
-def update_ssid(req):
+@server.route('/settings/wifi/update_ssid', methods=['GET', 'POST'])
+async def update_ssid(req):
     logging.debug('update_ssid')
     form = req.form
     ssid_index = form['ssid_index']
@@ -230,11 +235,11 @@ def update_ssid(req):
         logging.error('update ssid curr_index out of range' + ssid_index)
     args = get_args(page='Remove SSID', form=form)
     args['waps'] = wifi_manager.scan_for_waps_sorted()
-    return render_template(f"{WIFI_TEMPLATE_PATH}/configure_wifi.html", args=args)
+    return await render_template(f"{WIFI_TEMPLATE_PATH}/configure_wifi.html", args=args)
 
 
-@server.route('/wi-fi/update_config', methods=['GET', 'POST'])
-def update_config(req):
+@server.route('/settings/wifi/update_config', methods=['GET', 'POST'])
+async def update_config(req):
     logging.debug('update_config ')
     form = req.form
     action = form['action']

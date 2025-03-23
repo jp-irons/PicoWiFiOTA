@@ -26,9 +26,9 @@ logging._logging_types = LOG_LEVEL
 #app_name = "Pi Pico Embedded"
 # return file in IMAGES_PATH
 @server.route("/static/<file_name>", methods=['GET', 'POST'])
-def images(request, file_name):
+async def static(request, file_name):
     file_path = f"{IMAGES_PATH}/{file_name}"
-    logging.debug('getting image ' + file_path)
+    logging.debug('getting static content ' + file_path)
     page = open(file_path, "rb")
     content = page.read()
     page.close()
@@ -44,17 +44,17 @@ def images(request, file_name):
 
 # catchall example
 @server.catchall()
-def catchall(request):
+async def catchall(request):
     args = wifimanager.get_args(page='Not found error: 404')
     args['url'] = request.uri
-    return render_template(f"{CONTENT_PATH}/unexpected.html", args=args), 404
+    return await render_template(f"{CONTENT_PATH}/unexpected.html", args=args), 404
 
 
 # url parameter and template render
 @server.route("/", methods=["GET"])
-def home(request):
+async def home(request):
     args = wifimanager.get_args(page='Home')
-    return render_template(f"{CONTENT_PATH}/home.html", args=args)
+    return await render_template(f"{CONTENT_PATH}/home.html", args=args)
 
 
 # @server.route('/page2')

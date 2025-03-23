@@ -30,7 +30,7 @@ def is_connected_to_wifi():
   wlan = network.WLAN(network.STA_IF)
   return wlan.isconnected()
 
-# helper method to quickly get connected to wi-fi
+# helper method to quickly get connected to settings
 def connect_to_wifi(ssid, password, timeout_seconds=30):
   import network, time
 
