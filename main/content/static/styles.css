@@ -29,14 +29,7 @@ th {
 }
 
 .navbar {
-  background-color: #999;
-  padding: 10px;
-  text-align: left;
-  font-size: 15px;
-}
-
-.menubar {
-  background-color: #ddd;
+  background-color: #888;
   padding: 10px;
   text-align: left;
   font-size: 15px;
@@ -92,6 +85,67 @@ th {
   padding: 10px;
   text-align: center;
 }
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #888;
+}
+
+li {
+  float: left;
+}
+
+li a, .dropbtn {
+  display: inline-block;
+  background-color: #888;
+  color: black;
+  text-align: center;
+  padding: 10px;
+  text-decoration: none;
+}
+
+li a:hover, .dropdown:hover .dropbtn {
+  background-color: #aaa;
+  color: white;
+}
+
+li.dropdown {
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #888;
+  color: black;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-content a {
+  background-color: #888;
+  color: black;
+  padding: 10px;
+  text-decoration: none;
+  display: block;
+  text-align: left;
+}
+
+.dropdown-content a:hover {
+  background-color: #aaa;
+  color: white;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+  background-color: #aaa;
+  color: white;
+}
+
 
 /* Responsive layout - makes the three columns stack on top of each other instead of next to each other */
 @media (max-width: 600px) {
