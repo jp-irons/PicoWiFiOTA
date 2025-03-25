@@ -33,6 +33,13 @@ th {
   font-size: 15px;
 }
 
+.menubar {
+  background-color: #ccc;
+  padding: 0px;
+  text-align: left;
+  font-size: 15px;
+}
+
 /* Style the header */
 .header {
   background-color: #88a;

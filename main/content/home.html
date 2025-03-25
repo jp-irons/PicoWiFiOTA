@@ -1,20 +1,6 @@
 {{render_template('content/base_header.html', args = args)}}
 {{render_template('content/actions.html', args = args)}}
-<div class="column middle-right content">
-    <table style="overflow-x:auto;">
-    <tr>
-        <td>Application</td>
-        <td>{{ args['app_name'] }}</td>
-    </tr><tr>
-        <td>Wi-Fi</td>
-        <td>{{ args['wifi_sta'] }}</td>
-    </tr><tr>
-        <td>Address</td>
-        <td>{{ args['ifconfig'][0] }}</td>
-    </tr><tr>
-        <td>Access Point</td>
-        <td>'{{ args['wifi_ap'] }}': Run {{ args['wifi_ap_required'] }} ({{ args['wifi_ap_status'] }})</td>
-    </tr>
-    </table>
+<div class="column middle-right content" style="padding: 0px;">
+    <iframe src="/settings" title="Iframe Example" width="100%" height="100%"></iframe>
 </div>
 {{render_template('content/base_footer.html')}}
