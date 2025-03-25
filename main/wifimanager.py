@@ -51,6 +51,7 @@ class WiFiManager:
                 json.dump(self.wlan_attributes, f)
         self.ssids = list(self.wlan_attributes['WIFI'])
         self.ssids.sort(key=lambda x: x[0])
+        logging.debug('load done')
 
     def save(self):
         logging.debug('save')
@@ -249,9 +250,10 @@ async def update_config(req):
     if 'Save' == action:
         logging.debug('update_config Save')
         wifi_manager.save()
+    logging.debug('getting args')
     args = get_args(page='Configure Wi-Fi')
     args['waps'] = wifi_manager.scan_for_waps_sorted()
-    return render_template(f"{WIFI_TEMPLATE_PATH}/configure_wifi.html", args=args)
+    return await render_template(f"{WIFI_TEMPLATE_PATH}/configure_wifi.html", args=args)
 
 
 def log_serverUrl():
