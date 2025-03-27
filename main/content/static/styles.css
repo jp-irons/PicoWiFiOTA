@@ -91,7 +91,8 @@ ul {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: #888;
+  background-color: #aaa;
+  color: black;
 }
 
 li {
@@ -100,7 +101,7 @@ li {
 
 li a, .dropbtn {
   display: inline-block;
-  background-color: #888;
+  background-color: #aaa;
   color: black;
   text-align: center;
   padding: 10px;
@@ -108,8 +109,8 @@ li a, .dropbtn {
 }
 
 li a:hover, .dropdown:hover .dropbtn {
-  background-color: #aaa;
-  color: white;
+  background-color: #888;
+  color: black;
 }
 
 li.dropdown {
@@ -137,13 +138,13 @@ li.dropdown {
 
 .dropdown-content a:hover {
   background-color: #aaa;
-  color: white;
+  color: black;
 }
 
 .dropdown:hover .dropdown-content {
   display: block;
-  background-color: #aaa;
-  color: white;
+  background-color: #888;
+  color: black;
 }
 
 
