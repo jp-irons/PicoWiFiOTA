@@ -1,66 +1,16 @@
 # import micropython_ota
 import os
 import logging
-# import asyncio
 import uasyncio as asyncio
 from phew import server
 from phew.template import render_template
+import settings
+import firmware
 import wifimanager
-
-
-# logging.basicConfig(level=logging.DEBUG)
-# logger = logging.getLogger(__name__)
-#
-APP_NAME = "Pi Pico Embedded"
-AP_DOMAIN = "pipico.net"
-
-CONTENT_PATH = "content"
-IMAGES_PATH = "content/static"
-APP_TEMPLATE_PATH = "content/app"
 
 LOG_LEVEL = logging.LOG_ALL
 
 logging._logging_types = LOG_LEVEL
-
-
-#app_name = "Pi Pico Embedded"
-# return file in IMAGES_PATH
-@server.route("/static/<file_name>", methods=['GET', 'POST'])
-async def static(request, file_name):
-    file_path = f"{IMAGES_PATH}/{file_name}"
-    logging.debug('getting static content ' + file_path)
-    page = open(file_path, "rb")
-    content = page.read()
-    page.close()
-    return content, 200
-
-
-
-# @server.route('/', methods=['GET', 'POST'])
-# async def curr_index(req):
-#     return Template('home.html').render(page='Index')
-#
-#
-
-# catchall example
-@server.catchall()
-async def catchall(request):
-    args = wifimanager.get_args(page='Not found error: 404')
-    args['url'] = request.uri
-    return await render_template(f"{CONTENT_PATH}/unexpected.html", args=args), 404
-
-
-# url parameter and template render
-@server.route("/", methods=["GET"])
-async def home(request):
-    args = wifimanager.get_args(page='Home')
-    return await render_template(f"{CONTENT_PATH}/home.html", args=args)
-
-
-# @server.route('/page2')
-# async def page2(req):
-#     args = get_args(page='Page 2')
-#     return Template('page2.html').render(args)
 
 
 async def start_server(host="0.0.0.0", port=80):

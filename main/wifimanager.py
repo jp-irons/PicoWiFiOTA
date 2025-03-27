@@ -3,11 +3,12 @@ import network
 import uasyncio as asyncio
 
 import logging
-from main import APP_NAME
+
 from phew import server
 from phew.template import render_template
 
-SETTINGS_TEMPLATE_PATH = "content/settings"
+from settings import SETTINGS_TEMPLATE_PATH, APP_NAME
+
 WIFI_FILE = "config/wifi.json"
 WIFI_MAX_ATTEMPTS = 3
 WIFI_MAX_SSIDS = 5
@@ -172,14 +173,6 @@ class WiFiManager:
 
 
 wifi_manager = WiFiManager()
-
-
-@server.route("/settings", methods=["GET"])
-@server.route("/settings/", methods=["GET"])
-async def settings_home(request):
-    logging.debug("settings_home")
-    args = get_args(page='Settings Home')
-    return await render_template(f"{SETTINGS_TEMPLATE_PATH}/home.html", args=args)
 
 
 @server.route("/settings/wifi", methods=["GET"])
