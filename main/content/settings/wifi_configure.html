@@ -1,7 +1,10 @@
-{{render_template('content/settings/base_header.html', args = args)}}
-<body>
+{{render_template('content/base_header.html', args = args)}}
+<div class="column middle-right content" style="padding: 0px;">
 {{render_template('content/settings/actions.html', args = args)}}
-<div class="content" style="width:100%;overflow:hidden">
+<div class="page_title">
+    <p>{{ args['page'] }}</p>
+</div>
+<div class="content">
     <table style="overflow-x:auto;">
         <tr>
         <td>Application</td>
@@ -50,5 +53,5 @@
         </tr>""".format(["Visible", ""][i!=0], wap[0], wap[1]) for i, wap in enumerate(args['waps'])]) }}
     </table>
 </div>
-{{render_template('content/settings/base_footer.html')}}
-</body>
+</div>
+{{render_template('content/base_footer.html')}}

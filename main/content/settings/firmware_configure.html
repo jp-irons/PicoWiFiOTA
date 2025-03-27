@@ -1,6 +1,9 @@
-{{render_template('content/settings/base_header.html', args = args)}}
-<body>
+{{render_template('content/base_header.html', args = args)}}
+<div class="column middle-right content" style="padding: 0px;">
 {{render_template('content/settings/actions.html', args = args)}}
+<div class="page_title">
+    <p>{{ args['page'] }}</p>
+</div>
 <div class="content">
     <table style="overflow-x:auto;">
     <tr>
@@ -10,5 +13,6 @@
     </tr>
     </table>
 </div>
-{{render_template('content/settings/base_footer.html')}}
-</body>
+</div>
+{{render_template('content/base_footer.html')}}
+

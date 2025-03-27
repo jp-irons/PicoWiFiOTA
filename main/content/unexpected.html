@@ -1,4 +1,12 @@
 {{render_template('content/base_header.html', args = args)}}
-<body>
-<div class="column middle-right content">Unexpected action: {{args['url']}}</div>
-</body>
+<div class="column middle-right content" style="padding: 0px;">
+<div class="page_title">
+    <p>{{ args['page'] }}</p>
+</div>
+<div class="content">
+Unexpected action: {{args['url']}}
+</div>
+</div>
+{{render_template('content/base_footer.html')}}
+
+

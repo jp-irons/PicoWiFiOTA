@@ -1,14 +1,11 @@
 {{render_template('content/base_header.html', args = args)}}
-<body>
-<div class="header">
-    <p>{{ args['app_name'] }}</p>
-</div>
-<div class="row navbar">
-
-{{render_template('content/actions.html', args = args)}}
 <div class="column middle-right content" style="padding: 0px;">
-    <iframe src="/settings" title="Iframe Example" style="border:none;" width="100%" height="100%"></iframe>
+<div class="page_title">
+    <p>{{ args['page'] }}</p>
+</div>
+<div class="content">
+home content goes here
 </div>
 </div>
 {{render_template('content/base_footer.html')}}
-</body>
+
