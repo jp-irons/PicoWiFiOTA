@@ -187,15 +187,15 @@ async def settings_home(request):
 async def wifi_home(request):
     logging.debug("wifi_home")
     args = get_args(page='Wi-Fi Home')
-    return await render_template(f"{SETTINGS_TEMPLATE_PATH}/wifi.html", args=args)
+    return await render_template(f"{SETTINGS_TEMPLATE_PATH}/wifi_home.html", args=args)
 
 
-@server.route('/settings/wifi/configure_wifi', methods=['GET', 'POST'])
+@server.route('/settings/wifi/configure', methods=['GET', 'POST'])
 async def configure_wifi(req):
     logging.debug("/wifi/configure")
     args = get_args(page='Configure Wi-Fi')
     args['waps'] = wifi_manager.scan_for_waps_sorted()
-    return await render_template(f"{SETTINGS_TEMPLATE_PATH}/configure_wifi.html", args=args)
+    return await render_template(f"{SETTINGS_TEMPLATE_PATH}/wifi_configure.html", args=args)
 
 
 @server.route('/settings/wifi/add_ssid', methods=['GET', 'POST'])
@@ -210,7 +210,7 @@ async def add_ssid(req):
         wifi_manager.insert_ssid(new_ssid, new_password)
     args = get_args(page='Add SSID', form=form)
     args['waps'] = wifi_manager.scan_for_waps_sorted()
-    return await render_template(f"{SETTINGS_TEMPLATE_PATH}/configure_wifi.html", args=args)
+    return await render_template(f"{SETTINGS_TEMPLATE_PATH}/wifi_configure.html", args=args)
 
 
 @server.route('/settings/wifi/update_ssid', methods=['GET', 'POST'])
@@ -242,7 +242,7 @@ async def update_ssid(req):
         logging.error('update ssid curr_index out of range' + ssid_index)
     args = get_args(page='Remove SSID', form=form)
     args['waps'] = wifi_manager.scan_for_waps_sorted()
-    return await render_template(f"{SETTINGS_TEMPLATE_PATH}/configure_wifi.html", args=args)
+    return await render_template(f"{SETTINGS_TEMPLATE_PATH}/wifi_configure.html", args=args)
 
 
 @server.route('/settings/wifi/update_config', methods=['GET', 'POST'])
@@ -259,7 +259,7 @@ async def update_config(req):
     logging.debug('getting args')
     args = get_args(page='Configure Wi-Fi')
     args['waps'] = wifi_manager.scan_for_waps_sorted()
-    return await render_template(f"{SETTINGS_TEMPLATE_PATH}/configure_wifi.html", args=args)
+    return await render_template(f"{SETTINGS_TEMPLATE_PATH}/wifi_configure.html", args=args)
 
 
 def log_serverUrl():
