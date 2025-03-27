@@ -7,16 +7,16 @@ from settings import SETTINGS_TEMPLATE_PATH, APP_NAME
 
 @server.route("/settings/firmware", methods=["GET"])
 @server.route("/settings/firmware/", methods=["GET"])
-async def wifi_home(request):
+async def firmware_home(request):
     logging.debug("firmware_home")
-    args = get_args(page='Firmware Home')
+    args = get_args(page='Firmware Settings')
     return await render_template(f"{SETTINGS_TEMPLATE_PATH}/firmware_home.html", args=args)
 
 
 @server.route("/settings/firmware/configure", methods=["GET"])
-async def wifi_home(request):
-    logging.debug("firmware_home")
-    args = get_args(page='Firmware Home')
+async def firmware_configure(request):
+    logging.debug("firmware_configure")
+    args = get_args(page='Configure Firmware Settings')
     return await render_template(f"{SETTINGS_TEMPLATE_PATH}/firmware_configure.html", args=args)
 
 

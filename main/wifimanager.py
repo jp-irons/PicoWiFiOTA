@@ -179,20 +179,20 @@ wifi_manager = WiFiManager()
 @server.route("/settings/wifi/", methods=["GET"])
 async def wifi_home(request):
     logging.debug("wifi_home")
-    args = get_args(page='Wi-Fi Home')
+    args = get_args(page='Wi-Fi Settings')
     return await render_template(f"{SETTINGS_TEMPLATE_PATH}/wifi_home.html", args=args)
 
 
 @server.route('/settings/wifi/configure', methods=['GET', 'POST'])
-async def configure_wifi(req):
+async def wifi_configure(req):
     logging.debug("/wifi/configure")
-    args = get_args(page='Configure Wi-Fi')
+    args = get_args(page='Configure Wi-Fi Settings')
     args['waps'] = wifi_manager.scan_for_waps_sorted()
     return await render_template(f"{SETTINGS_TEMPLATE_PATH}/wifi_configure.html", args=args)
 
 
 @server.route('/settings/wifi/add_ssid', methods=['GET', 'POST'])
-async def add_ssid(req):
+async def wifi_add_ssid(req):
     logging.debug('add_ssid')
     form = req.form
     action = form['action']
@@ -201,13 +201,13 @@ async def add_ssid(req):
         logging.debug('add_ssid ' + new_ssid)
         new_password = form['password']
         wifi_manager.insert_ssid(new_ssid, new_password)
-    args = get_args(page='Add SSID', form=form)
+    args = get_args(page='Added SSID', form=form)
     args['waps'] = wifi_manager.scan_for_waps_sorted()
     return await render_template(f"{SETTINGS_TEMPLATE_PATH}/wifi_configure.html", args=args)
 
 
 @server.route('/settings/wifi/update_ssid', methods=['GET', 'POST'])
-async def update_ssid(req):
+async def wifi_update_ssid(req):
     logging.debug('update_ssid')
     form = req.form
     ssid_index = form['ssid_index']
@@ -233,24 +233,27 @@ async def update_ssid(req):
         logging.error('update ssid invalid value' + ssid_index)
     except IndexError:
         logging.error('update ssid curr_index out of range' + ssid_index)
-    args = get_args(page='Remove SSID', form=form)
+    args = get_args(page='Updated SSID settings', form=form)
     args['waps'] = wifi_manager.scan_for_waps_sorted()
     return await render_template(f"{SETTINGS_TEMPLATE_PATH}/wifi_configure.html", args=args)
 
 
 @server.route('/settings/wifi/update_config', methods=['GET', 'POST'])
-async def update_config(req):
+async def wifi_update_config(req):
     logging.debug('update_config ')
     form = req.form
     action = form['action']
+    page_name = "Updated Wi-Fi Settings"
     if 'Reload' == action:
         logging.debug('update_config Reload')
         wifi_manager.load()
+        page_name = "Reloaded Wi-Fi Settings"
     if 'Save' == action:
         logging.debug('update_config Save')
         wifi_manager.save()
+        page_name = "Saved Wi-Fi Settings"
     logging.debug('getting args')
-    args = get_args(page='Configure Wi-Fi')
+    args = get_args(page=page_name)
     args['waps'] = wifi_manager.scan_for_waps_sorted()
     return await render_template(f"{SETTINGS_TEMPLATE_PATH}/wifi_configure.html", args=args)
 

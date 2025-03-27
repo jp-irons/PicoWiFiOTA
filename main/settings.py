@@ -27,7 +27,7 @@ async def home(request):
 @server.route("/settings/", methods=["GET"])
 async def settings_home(request):
     logging.debug("settings_home")
-    args = get_args(page='Settings Home')
+    args = get_args(page='Settings')
     return await render_template(f"{SETTINGS_TEMPLATE_PATH}/home.html", args=args)
 
 
