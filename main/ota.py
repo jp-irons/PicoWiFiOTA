@@ -22,8 +22,7 @@ class OTAManager:
             logging.debug('open failed for ' + self.ota_filename)
             # handle the file open case
             self.ota_attributes = {
-                "OTA_PATH": "https://github.com/jp-irons/PicoWiFiOTA/raw/refs/heads/ota/releases/",
-                "VERSIONS": "versions.json"
+                "VERSIONS": "https://github.com/jp-irons/PicoWiFiOTA/raw/refs/heads/ota/releases/versions.json"
             }
 
             # save the current version
