@@ -1,5 +1,6 @@
 # import micropython_ota
 import os
+
 import logging
 import uasyncio as asyncio
 from phew import server
@@ -7,11 +8,52 @@ from phew.template import render_template
 import settings
 import firmware
 import wifimanager
+from tarfile import TarFile
 
 LOG_LEVEL = logging.LOG_ALL
 
 logging._logging_types = LOG_LEVEL
 
+def exists(path):
+    try:
+        _ = os.stat(path)
+    except:
+        return False
+    else:
+        return True
+
+
+def untar(tarfilename, target='/untar', overwrite=False, verbose=False, chunksize=4096):
+    size_b, free_b = print_memory('before')
+    with open(tarfilename) as tar:
+        if not exists(target):
+            print(target)
+            os.mkdir(target)
+        for info in TarFile(fileobj=tar):
+            print(info.name)
+            if info.type == "dir":
+                if verbose:
+                    print("D %s" % info.name)
+
+                name = target + '/' + info.name.rstrip("/")
+                if not exists(name):
+                    print(name)
+                    os.mkdir(name)
+            elif info.type == "file":
+                if verbose:
+                    print("F %s" % info.name)
+
+                if overwrite or not exists(info.name):
+                    with open(info.name, "wb") as fp:
+                        while True:
+                            chunk = info.subf.read(chunksize)
+                            if not chunk:
+                               break
+                            fp.write(chunk)
+            elif verbose:
+                print("? %s" % info.name)
+    size_a, free_a = print_memory('after')
+    print('used:  ', free_b-free_a)
 
 async def start_server(host="0.0.0.0", port=80):
     logging.debug('start server')
@@ -34,6 +76,20 @@ def disconnect_wifi():
     if not wifimanager.wifi_manager.sta.isconnected():
         return None
     wifimanager.wifi_manager.sta.disconnect()
+
+
+def memory(note=''):
+    stat = os.statvfs("/")
+    size = stat[1] * stat[2]
+    free = stat[0] * stat[3]
+    return size, free
+
+def print_memory(note=''):
+    print('memory', note)
+    size, free = memory()
+    print('flash: ', size)
+    print('free:  ', free)
+    return size, free
 
 
 def execute():

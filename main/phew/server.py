@@ -269,7 +269,7 @@ async def _handle_request(reader, writer):
   if isinstance(response, str):
     response = (response,)
 
-  # if shorthand tuple notation used then build full response object
+  # if shorthand tuple notation used then releases full response object
   if isinstance(response, tuple):
     body = response[0]
     status = response[1] if len(response) >= 2 else 200
