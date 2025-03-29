@@ -1,0 +1,4 @@
+{
+  "OTA_PATH" : "https://github.com/jp-irons/PicoWiFiOTA/raw/refs/heads/ota/releases/",
+  "VERSIONS" : "versions.json"
+}
