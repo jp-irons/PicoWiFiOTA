@@ -1,11 +1,7 @@
 {
-  "Latest" :
-  [
-      ["v0.0.01", "build_v0.0.01.tar"]
-  ],
-  "Versions" :
-  [
-      ["v0.0.01", "build_v0.0.01.tar"],
-      ["v0.0.02", "build_v0.0.02.tar"]
-  ]
+  "Latest" : "v0.0.01",
+  "Versions" : {
+    "v0.0.01": "build_v0.0.01.tar",
+    "v0.0.02": "build_v0.0.02.tar"
+  }
 }
