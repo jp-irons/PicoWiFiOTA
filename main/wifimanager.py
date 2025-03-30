@@ -9,12 +9,12 @@ from phew.template import render_template
 
 from settings import SETTINGS_TEMPLATE_PATH, APP_NAME
 
-WIFI_FILE = "config/wifi.json"
+WIFI_CONFIG_FILE = "config/wifi.json"
 WIFI_MAX_ATTEMPTS = 3
 WIFI_MAX_SSIDS = 5
 
 class WiFiManager:
-    def __init__(self, wlan_filename=WIFI_FILE):
+    def __init__(self, wlan_filename=WIFI_CONFIG_FILE):
         self.wlan_filename = wlan_filename
         self.wlan_attributes = None
         self.ssids = None

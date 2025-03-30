@@ -6,7 +6,7 @@ import uasyncio as asyncio
 from phew import server
 from phew.template import render_template
 import settings
-import firmware
+import ota
 import wifimanager
 from tarfile import TarFile
 
